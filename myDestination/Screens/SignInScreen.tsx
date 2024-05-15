@@ -19,7 +19,7 @@ const SignInScreen = () => {
   return (
     <View style={styles.container}>
       <Image source={myDestinationLogo} style={styles.logo} />
-      <Text style={styles.title}>My Destination</Text>
+      <Text style={styles.title}>Welcome back!</Text>
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -39,17 +39,14 @@ const SignInScreen = () => {
       />
       <View style={styles.buttonContainer}>
         <View style={styles.buttonSecondary}>
-            <Button
-            title="Sign Up" 
-            color="#ffffff"
-            onPress={handleSignUp} 
-            
-            />
+          <Button 
+            title="Sign Up"   
+            onPress={handleSignUp}
+          />
         </View>
         <View style={styles.buttonPrimary}>
             <Button 
             title="Sign In" 
-            color="#ffffff"
             onPress={handleSignIn} 
             />
         </View>
@@ -73,18 +70,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    marginTop: -20,
-    fontSize: 40,
+    marginTop: -10,
+    fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 20,
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignContent: 'center',
     flexShrink: 0,
     color: '#FFCE1C',
   },
   input: {
-    width: '100%',
+    width: '90%',
     height: 60,
     marginBottom: 10,
     borderRadius: 25,
@@ -99,7 +96,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
+    width: '90%',
   },
   buttonPrimary: {
     width: '46%',

@@ -54,7 +54,7 @@ const HomeScreen = () => {
         <Image source={myDestinationLogo} style={styles.logo} />
         <Text style={styles.introTitle}>My Destination</Text>
         <Text style={styles.introText}>
-          Welcome to MyDestination, your ultimate travel companion app. Discover and book exciting adventures around the world!
+          Welcome to MyDestination, your ultimate travel companion app. Discover and explore the exciting adventures around the world!
         </Text>
       </View>
 
@@ -81,7 +81,6 @@ const styles = StyleSheet.create({
   },
   introContainer: {
     alignItems: 'center',
-
     padding: 20,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
@@ -91,7 +90,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: '40%',
-    height: '40%',
+    
     resizeMode: 'contain',
   },
   introTitle: {

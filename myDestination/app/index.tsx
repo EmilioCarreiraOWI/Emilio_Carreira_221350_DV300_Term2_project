@@ -7,6 +7,8 @@ import SignInScreen from "../Screens/SignInScreen";
 import SignUpScreen from "../Screens/SignUpScreen";
 import HomeScreen from "../Screens/HomeScreen";
 import SearchScreen from "../Screens/searchScreen";
+import ProfileScreen from "@/Screens/ProfileScreen";
+import ActivityScreen from "@/Screens/ActivityScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -30,16 +32,29 @@ export default function Index() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-          if (route.name === 'SignIn') {
-            iconName = focused ? 'log-in' : 'log-in-outline';
-          } else if (route.name === 'SignUp') {
-            iconName = focused ? 'person-add' : 'person-add-outline';
-          } else if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Search') {
-            iconName = focused ? 'search' : 'search-outline';
+          switch (route.name) {
+            case 'SignIn':
+              iconName = focused ? 'log-in' : 'log-in-outline';
+              break;
+            case 'SignUp':
+              iconName = focused ? 'person-add' : 'person-add-outline';
+              break;
+            case 'Home':
+              iconName = focused ? 'home' : 'home-outline';
+              break;
+            case 'Search':
+              iconName = focused ? 'search' : 'search-outline';
+              break;
+            case 'Activity':
+              iconName = focused ? 'pulse' : 'pulse-outline'; // Changed to more appropriate icons
+              break;
+            case 'Profile':
+              iconName = focused ? 'person' : 'person-outline'; // Changed to more appropriate icons
+              break;
+            default:
+              iconName = 'alert-circle-outline'; // Default icon
           }
-          return <Ionicons name={iconName as React.ComponentProps<typeof Ionicons>['name']} size={size} color={color} />;
+          return <Ionicons name={iconName as any} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#F3C94F',
         tabBarInactiveTintColor: 'gray',
@@ -51,6 +66,8 @@ export default function Index() {
       <Tab.Screen name="SignUp" component={SignUpScreen} options={{ tabBarLabel: 'Sign Up' }} />
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Search" component={SearchScreen} options={{ tabBarLabel: 'Search' }} />
+      <Tab.Screen name="Activity" component={ActivityScreen} options={{ tabBarLabel: 'Activity' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
 }

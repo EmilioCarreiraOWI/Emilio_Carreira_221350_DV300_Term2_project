@@ -58,6 +58,7 @@ const HomeScreen = () => {
         </Text>
       </View>
 
+      <Text>Explore the Activity you choose</Text>
       <View style={styles.cardRow}>
         {cardData.map((card, index) => (
           <View key={index} style={styles.cardContainer}>
@@ -90,7 +91,6 @@ const styles = StyleSheet.create({
   },
   logo: {
     width: '40%',
-    
     resizeMode: 'contain',
   },
   introTitle: {

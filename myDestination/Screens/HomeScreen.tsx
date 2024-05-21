@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Image, ScrollView, StyleSheet, Text } from 'react-native'; // Added Text to imports
+import React, { useState } from 'react';
+import { View, Image, ScrollView, StyleSheet, Text, TextInput } from 'react-native'; // Added TextInput to imports
 import { useNavigation } from '@react-navigation/native';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 
 const HomeScreen = () => {
+  const [searchQuery, setSearchQuery] = useState('');
   const cardData = [
     {
       image: require('../assets/images/card1.jpg'),
@@ -45,11 +46,34 @@ const HomeScreen = () => {
       title: 'Deep Sea Fishing',
       description: 'Catch the biggest fish and enjoy thrilling deep sea fishing trips.'
     },
+    // {
+    //   image: require('../assets/images/card9.jpg'),
+    //   title: 'Rock Climbing',
+    //   description: 'Challenge yourself with our rock climbing adventures in stunning locations.'
+    // },
+    // {
+    //   image: require('../assets/images/card10.jpg'),
+    //   title: 'Cycling Tours',
+    //   description: 'Pedal through scenic routes and enjoy breathtaking landscapes.'
+    // },
+    // {
+    //   image: require('../assets/images/card11.jpg'),
+    //   title: 'Kayaking',
+    //   description: 'Paddle through serene waters and explore nature up close.'
+    // },
+    // {
+    //   image: require('../assets/images/card12.jpg'),
+    //   title: 'Paragliding',
+    //   description: 'Soar above the landscapes and enjoy panoramic views from the sky.'
+    // }
   ];
+
+  const filteredCardData = cardData.filter(card =>
+    card.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <ScrollView style={styles.container}>
-
       <View style={styles.introContainer}>
         <Image source={myDestinationLogo} style={styles.logo} />
         <Text style={styles.introTitle}>My Destination</Text>
@@ -58,8 +82,16 @@ const HomeScreen = () => {
         </Text>
       </View>
 
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search for an activity..."
+        placeholderTextColor="#ccc"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
       <View style={styles.cardRow}>
-        {cardData.map((card, index) => (
+        {filteredCardData.map((card, index) => (
           <View key={index} style={styles.cardContainer}>
             <Image source={card.image} style={styles.cardImage} />
             <View style={styles.cardTextContainer}>
@@ -107,6 +139,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     textAlign: 'center',
+  },
+  searchBar: {
+    height: 50,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    backgroundColor: '#3C3E47',
+    borderColor: '#108DF9',
+    borderWidth: 1,
+    borderRadius: 20,
+    fontSize: 16,
+    color: '#fff',
   },
   cardRow: {
     flexDirection: 'row',

@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
-import SignUpScreen from './SignUpScreen';
 import { handleLogin } from '../services/authService';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../path/to/navigationTypes'; // Adjust the path as necessary
+
+// Define the navigation prop type
+type SignInScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SignInScreen'>;
 
 const SignInScreen = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSignIn = () => {
-    handleLogin(email, password);
-    console.log('Sign In pressed');
+  const handleSignIn = async () => {
+    try {
+      await handleLogin(email, password);
+      console.log('Sign In pressed');
+    } catch (err) {
+      setError('Invalid email or password'); // Assuming the error thrown is related to invalid credentials
+    }
   };
 
-  const handleSignUp = () => {
-    // Handle navigation to sign up screen here
-    console.log('Sign Up pressed');
-  };
-
-  const navigation = useNavigation();
+  const navigation = useNavigation<SignInScreenNavigationProp>();
 
   const navigateToRegister = () => {
     navigation.navigate('SignUpScreen');
@@ -39,18 +43,17 @@ const SignInScreen = () => {
         keyboardType="email-address"
         autoCapitalize="none"
       />
+      {error && <Text style={styles.errorText}>{error}</Text>}
       <TextInput
         style={styles.input}
-        placeholder="Password"
+        placeholder="Your Password"
         placeholderTextColor="#ffffff"
         value={password}
         onChangeText={newText => setPassword(newText)}
         secureTextEntry
       />
+      {error && <Text style={styles.errorText}>{error}</Text>}
       <View style={styles.buttonContainer}>
-      <TouchableOpacity style={styles.buttonSecondary} onPress={handleSignIn}>
-            <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.buttonPrimary} onPress={handleSignIn}>
             <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
@@ -95,6 +98,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#3C3E47',
     color: '#ffffff',
   },
+  errorText: {
+    width: '90%',
+    color: 'red',
+    marginBottom: 10,
+  },
   buttonContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -103,7 +111,7 @@ const styles = StyleSheet.create({
     width: '90%',
   },
   buttonPrimary: {
-    width: '46%',
+    width: '100%',
     height: 60,
     backgroundColor: '#108DF9',
     borderRadius: 25,
@@ -112,20 +120,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     color: 'white',
   },
-  buttonSecondary: {
-    width: '46%',
-    height: 60,
-    borderColor: '#108DF9',
-    backgroundColor: '#3C3E47',
-    borderWidth: 3,
-    borderRadius: 25,
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: 'white',
-  },
   buttonText: {
-
+    color: '#fff'
   }
 });
 

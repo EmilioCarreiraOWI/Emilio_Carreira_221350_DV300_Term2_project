@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
+import { useNavigation } from '@react-navigation/native';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
 const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigation = useNavigation();
 
-  const handleSignIn = () => {
-    // Handle sign in logic here
-    console.log('Sign In pressed');
-  };
-
-  const handleSignUp = () => {
-    // Handle navigation to sign up screen here
-    console.log('Sign Up pressed');
+  const handleSignUp = async () => {
+    const auth = getAuth();
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      console.log('User created successfully');
+      navigation.navigate('SignInScreen');
+    } catch (error) {
+      setError(error.message);
+      console.log('Error creating user:', error.message);
+    }
   };
 
   return (
@@ -37,19 +43,11 @@ const SignUpScreen = () => {
         onChangeText={setPassword}
         secureTextEntry
       />
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <View style={styles.buttonContainer}>
-        <View style={styles.buttonSecondary}>
-            <Button 
-            title="Sign In" 
-            onPress={handleSignIn} 
-            />
-        </View>
-        <View style={styles.buttonPrimary}>
-            <Button
-            title="Sign Up" 
-            onPress={handleSignUp} 
-            />
-        </View>
+        <TouchableOpacity style={styles.buttonPrimary} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Sign Up</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -89,7 +87,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     padding: 10,
     backgroundColor: '#3C3E47',
-    color: '#FFCE1C',
+    color: '#fff',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
   },
   buttonContainer: {
     display: 'flex',
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
     width: '90%',
   },
   buttonPrimary: {
-    width: '46%',
+    width: '100%',
     height: 60,
     backgroundColor: '#108DF9',
     borderRadius: 25,
@@ -108,18 +110,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     color: 'white',
   },
-  buttonSecondary: {
-    width: '46%',
-    height: 60,
-    borderColor: '#108DF9',
-    backgroundColor: '#3C3E47',
-    borderWidth: 3,
-    borderRadius: 25,
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: 'white',
-  },
+  buttonText: {
+    color: '#fff'
+  }
 });
 
 export default SignUpScreen;

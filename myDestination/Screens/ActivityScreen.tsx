@@ -35,6 +35,14 @@ const ActivityScreen = () => {
           <Text style={styles.infoText}>Difficulty: Moderate</Text>
         </View>
       </View>
+      <View style={styles.descriptionContainer}>
+        <View style={styles.headingContainer}>
+          <Text style={styles.headingText}>Description</Text>
+        </View>
+        <Text style={styles.descriptionText}>
+          Join John Doe on his latest adventure, mountain hiking! Experience the thrill and beauty of the mountains.
+        </Text>
+      </View>
       
     </View>
   );
@@ -48,7 +56,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#24252A',
   },
   profileContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
@@ -98,6 +105,23 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     marginVertical: 'auto',
+  },
+  headingContainer: {
+    width: '100%',
+    marginTop: 0
+  },
+  headingText: {
+    fontSize: 24,
+    marginBottom: 10
+  },
+  descriptionContainer: {
+    width: '90%',
+    padding: 20,
+    margin: 10,
+  },
+  descriptionText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 

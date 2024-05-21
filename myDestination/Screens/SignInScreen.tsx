@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
+import SignUpScreen from './SignUpScreen';
+import { handleLogin } from '../services/authService';
+import { useNavigation } from '@react-navigation/native';
 
 const SignInScreen = () => {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSignIn = () => {
-    // Handle sign in logic here
+    handleLogin(email, password);
     console.log('Sign In pressed');
   };
 
@@ -16,16 +20,22 @@ const SignInScreen = () => {
     console.log('Sign Up pressed');
   };
 
+  const navigation = useNavigation();
+
+  const navigateToRegister = () => {
+    navigation.navigate('SignUpScreen');
+  }
+
   return (
     <View style={styles.container}>
       <Image source={myDestinationLogo} style={styles.logo} />
       <Text style={styles.title}>Welcome back!</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Your Email"
         placeholderTextColor="#ffffff"
-        value={email}
-        onChangeText={setEmail}
+        onChangeText={newText => setEmail(newText)}
+        defaultValue={email}
         keyboardType="email-address"
         autoCapitalize="none"
       />
@@ -34,22 +44,16 @@ const SignInScreen = () => {
         placeholder="Password"
         placeholderTextColor="#ffffff"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={newText => setPassword(newText)}
         secureTextEntry
       />
       <View style={styles.buttonContainer}>
-        <View style={styles.buttonSecondary}>
-          <Button 
-            title="Sign Up"   
-            onPress={handleSignUp}
-          />
-        </View>
-        <View style={styles.buttonPrimary}>
-            <Button 
-            title="Sign In" 
-            onPress={handleSignIn} 
-            />
-        </View>
+      <TouchableOpacity style={styles.buttonSecondary} onPress={handleSignIn}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.buttonPrimary} onPress={handleSignIn}>
+            <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -120,6 +124,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     color: 'white',
   },
+  buttonText: {
+
+  }
 });
 
 export default SignInScreen;

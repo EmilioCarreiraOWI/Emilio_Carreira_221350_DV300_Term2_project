@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { View } from "react-native";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import SplashScreen from "../Screens/SplashScreen";
 import SignInScreen from "../Screens/SignInScreen";
 import SignUpScreen from "../Screens/SignUpScreen";
@@ -14,13 +16,27 @@ const Tab = createBottomTabNavigator();
 
 export default function Index() {
   const [showSplash, setShowSplash] = useState(true);
+  const [LoggedIn, setLoggedIn] = useState(false);
+  const auth = getAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 5000); // 5 seconds delay
-
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setLoggedIn(true);
+        console.log("User logged in..." + user.email);
+      } else {
+        setLoggedIn(false);
+        console.log("No user logged in...");
+      }
+    });
+    return unsubscribe;
   }, []);
 
   if (showSplash) {

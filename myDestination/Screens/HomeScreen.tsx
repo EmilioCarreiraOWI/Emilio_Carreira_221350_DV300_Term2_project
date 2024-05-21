@@ -58,7 +58,6 @@ const HomeScreen = () => {
         </Text>
       </View>
 
-      <Text>Explore the Activity you choose</Text>
       <View style={styles.cardRow}>
         {cardData.map((card, index) => (
           <View key={index} style={styles.cardContainer}>

@@ -7,7 +7,7 @@ export const handleLogin = (email, password) => { //add email and password in th
   .then((userCredential) => {
     // Signed in 
     const user = userCredential.user;
-    console.log("Logged in user" + user.email)
+    console.log("Logged in user: " + user.email)
     // ...
   })
   .catch((error) => {

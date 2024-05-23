@@ -33,6 +33,12 @@ const ActivityScreen = () => {
           <Text style={styles.infoText}>Distance: 8 km</Text>
           <Text style={styles.infoText}>Duration: 3 hours</Text>
           <Text style={styles.infoText}>Difficulty: Moderate</Text>
+          
+        </View>
+        <View style={styles.mainInfo}>
+          <Text style={styles.infoText}>Location: Mount Kilimanjaro</Text>
+          <Text style={styles.infoText}>Date: 10/05/2024</Text>
+          <Text style={styles.infoText}>Type: Hiking</Text>
         </View>
       </View>
       <View style={styles.descriptionContainer}>
@@ -92,14 +98,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 3,
     borderBottomWidth: 3,
     borderColor: '#F3C94F',
-    height: '10%',
+    padding: 15,
     width: '100%',
     backgroundColor: '#3C3E47',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    
-    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   infoText: {
     color: '#fff',
@@ -108,16 +112,16 @@ const styles = StyleSheet.create({
   },
   headingContainer: {
     width: '100%',
-    marginTop: 0
+    marginTop: 0,
   },
   headingText: {
     fontSize: 24,
-    marginBottom: 10
+    marginBottom: 10,
+    color: '#fff',
   },
   descriptionContainer: {
     width: '90%',
     padding: 20,
-    margin: 10,
   },
   descriptionText: {
     color: '#fff',

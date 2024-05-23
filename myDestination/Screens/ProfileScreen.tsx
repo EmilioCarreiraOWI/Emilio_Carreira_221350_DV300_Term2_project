@@ -57,7 +57,7 @@ const ProfileScreen = () => {
             // Sign-out successful.
             // Optionally navigate to the sign-in screen or update the state
             navigation.navigate('SignInScreen');
-            console.log('User has been signed out.');
+            console.log(currentUser?.email + ' has been signed out.');
           }).catch((error) => {
             // An error happened.
             console.error('Sign out error', error);

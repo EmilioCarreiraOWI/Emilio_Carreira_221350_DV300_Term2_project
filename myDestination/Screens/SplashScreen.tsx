@@ -24,10 +24,13 @@ const SplashScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.Image 
+      <View style={styles.SplashContainer}>
+        <Animated.Image 
         source={myDestinationLogo} 
         style={{ transform: [{ scale: logoScale }] }}
-      />
+        />
+      </View>
+      
     </View>
   );
 };
@@ -40,6 +43,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#24252A',
     width: '100%',
     height: '100%',
+  },
+  SplashContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
+    height: '50%',
   },
   text: {
     fontSize: 20,

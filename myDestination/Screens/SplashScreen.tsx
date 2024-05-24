@@ -1,40 +1,43 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
-
 import { Animated } from 'react-native';
 
+// SplashScreen component definition
 const SplashScreen = () => {
+  // Initialize animation state for logo scaling
   const logoScale = new Animated.Value(1);
 
+  // Define looping animation for logo scaling
   Animated.loop(
     Animated.sequence([
       Animated.timing(logoScale, {
-        toValue: 1.1,
-        duration: 1000,
-        useNativeDriver: true,
+        toValue: 1.1, // Scale up to 110%
+        duration: 1000, // Duration of 1000 milliseconds
+        useNativeDriver: true, // Use native driver for better performance
       }),
       Animated.timing(logoScale, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
+        toValue: 1, // Scale back to 100%
+        duration: 1000, // Duration of 1000 milliseconds
+        useNativeDriver: true, // Use native driver for better performance
       }),
     ])
-  ).start();
+  ).start(); // Start the animation
 
+  // Render the SplashScreen UI
   return (
     <View style={styles.container}>
       <View style={styles.SplashContainer}>
         <Animated.Image 
-        source={myDestinationLogo} 
-        style={{ transform: [{ scale: logoScale }] }}
+          source={myDestinationLogo} 
+          style={{ transform: [{ scale: logoScale }] }} // Apply animated scale transformation
         />
       </View>
-      
     </View>
   );
 };
 
+// StyleSheet for layout and styling
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -50,10 +53,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '50%',
     height: '50%',
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: 'bold',
   },
 });
 

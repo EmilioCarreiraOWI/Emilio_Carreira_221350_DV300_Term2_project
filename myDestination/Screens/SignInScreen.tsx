@@ -11,10 +11,12 @@ type SignInScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SignI
 
 const SignInScreen = () => {
 
+  // State hooks for managing form inputs and error message
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Function to handle sign in button press
   const handleSignIn = async () => {
     try {
       await handleLogin(email, password);
@@ -24,12 +26,15 @@ const SignInScreen = () => {
     }
   };
 
+  // Hook to access navigation functionality
   const navigation = useNavigation<SignInScreenNavigationProp>();
 
+  // Function to navigate to the registration screen
   const navigateToRegister = () => {
     navigation.navigate('SignUpScreen');
   }
 
+  // Main component render function
   return (
     <View style={styles.container}>
       <Image source={myDestinationLogo} style={styles.logo} />
@@ -62,6 +67,7 @@ const SignInScreen = () => {
   );
 };
 
+// Styles for the SignInScreen component
 const styles = StyleSheet.create({
   container: {
     flex: 1,

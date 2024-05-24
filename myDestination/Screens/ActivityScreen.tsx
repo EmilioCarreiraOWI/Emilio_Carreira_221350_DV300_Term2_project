@@ -7,19 +7,25 @@ import User1 from '../assets/images/user1.jpg';
 const ActivityScreen = () => {
   return (
     <View style={styles.container}>
+      {/* Background image with user profile and activity details */}
       <ImageBackground 
         source={ProfileCover1} 
         style={styles.profileContainer}
         resizeMode="cover"
       >
+        {/* User profile image */}
         <Image 
           source={User1} 
           style={styles.profileImage}
         />
+        {/* User name */}
         <Text style={styles.profileName}>John Doe</Text>
+        {/* User activity type */}
         <Text style={styles.userActivity}>Mountain Hiking</Text>
       </ImageBackground>
+      {/* Map and additional activity information */}
       <View style={styles.mapContainer}>
+        {/* Map view showing location */}
         <MapView
           style={styles.map}
           initialRegion={{
@@ -29,18 +35,21 @@ const ActivityScreen = () => {
             longitudeDelta: 0.0421,
           }}
         />
+        {/* Activity details like distance, duration, and difficulty */}
         <View style={styles.mainInfo}>
           <Text style={styles.infoText}>Distance: 8 km</Text>
           <Text style={styles.infoText}>Duration: 3 hours</Text>
           <Text style={styles.infoText}>Difficulty: Moderate</Text>
           
         </View>
+        {/* Additional activity details like location, date, and type */}
         <View style={styles.mainInfo}>
           <Text style={styles.infoText}>Location: Mount Kilimanjaro</Text>
           <Text style={styles.infoText}>Date: 10/05/2024</Text>
           <Text style={styles.infoText}>Type: Hiking</Text>
         </View>
       </View>
+      {/* Description of the activity */}
       <View style={styles.descriptionContainer}>
         <View style={styles.headingContainer}>
           <Text style={styles.headingText}>Description</Text>

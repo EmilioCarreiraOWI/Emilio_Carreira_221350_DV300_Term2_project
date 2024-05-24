@@ -4,7 +4,10 @@ import { useNavigation } from '@react-navigation/native';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 
 const HomeScreen = () => {
+  // State for handling search input
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Data for adventure cards
   const cardData = [
     {
       image: require('../assets/images/card1.jpg'),
@@ -45,29 +48,10 @@ const HomeScreen = () => {
       image: require('../assets/images/card8.jpg'),
       title: 'Deep Sea Fishing',
       description: 'Catch the biggest fish and enjoy thrilling deep sea fishing trips.'
-    },
-    // {
-    //   image: require('../assets/images/card9.jpg'),
-    //   title: 'Rock Climbing',
-    //   description: 'Challenge yourself with our rock climbing adventures in stunning locations.'
-    // },
-    // {
-    //   image: require('../assets/images/card10.jpg'),
-    //   title: 'Cycling Tours',
-    //   description: 'Pedal through scenic routes and enjoy breathtaking landscapes.'
-    // },
-    // {
-    //   image: require('../assets/images/card11.jpg'),
-    //   title: 'Kayaking',
-    //   description: 'Paddle through serene waters and explore nature up close.'
-    // },
-    // {
-    //   image: require('../assets/images/card12.jpg'),
-    //   title: 'Paragliding',
-    //   description: 'Soar above the landscapes and enjoy panoramic views from the sky.'
-    // }
+    }
   ];
 
+  // Filtering card data based on search query
   const filteredCardData = cardData.filter(card =>
     card.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -82,6 +66,7 @@ const HomeScreen = () => {
         </Text>
       </View>
 
+      {/* Search input for filtering activities */}
       <TextInput
         style={styles.searchBar}
         placeholder="Search for an activity..."
@@ -91,6 +76,7 @@ const HomeScreen = () => {
       />
 
       <View style={styles.cardRow}>
+        {/* Displaying filtered adventure cards */}
         {filteredCardData.map((card, index) => (
           <View key={index} style={styles.cardContainer}>
             <Image source={card.image} style={styles.cardImage} />

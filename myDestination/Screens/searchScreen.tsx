@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, FlatList, Text, Image } from 'react-native';
 import { Colors } from '../constants/Colors';
 
+// Define the User interface
 interface User {
   id: string;
   name: string;
@@ -9,6 +10,7 @@ interface User {
   activity: string;
 }
 
+// Define colors associated with different activities
 const activityColors: { [key: string]: string } = {
   'Mountain Hiking': '#FF6347', // Tomato
   'Scuba Diving': '#4682B4', // SteelBlue
@@ -23,8 +25,10 @@ const activityColors: { [key: string]: string } = {
 };
 
 const SearchScreen = () => {
+  // State for handling search input
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Static user data
   const users: User[] = [
     { id: '1', name: 'John Doe', image: require('../assets/images/user1.jpg'), activity: 'Mountain Hiking' },
     { id: '2', name: 'Jane Smith', image: require('../assets/images/user2.jpg'), activity: 'Scuba Diving' },
@@ -38,8 +42,10 @@ const SearchScreen = () => {
     { id: '10', name: 'Laura White', image: require('../assets/images/user10.jpg'), activity: 'Rock Climbing' },
   ];
 
+  // Filter users based on search query
   const filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
+  // Render each user as a card
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.card}>
       <Image source={item.image} style={styles.cardImage} />
@@ -48,6 +54,7 @@ const SearchScreen = () => {
     </View>
   );
 
+  // Main component render
   return (
     <View style={styles.container}>
       <TextInput
@@ -67,6 +74,7 @@ const SearchScreen = () => {
   );
 };
 
+// Styles for the SearchScreen component
 const styles = StyleSheet.create({
   container: {
     flex: 1,

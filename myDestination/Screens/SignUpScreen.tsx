@@ -4,12 +4,15 @@ import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 
+// Component for user sign-up
 const SignUpScreen = () => {
+  // State hooks for managing form inputs and error message
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigation = useNavigation();
 
+  // Function to handle user sign-up
   const handleSignUp = async () => {
     const auth = getAuth();
     try {
@@ -22,6 +25,7 @@ const SignUpScreen = () => {
     }
   };
 
+  // Main component render function
   return (
     <View style={styles.container}>
       <Image source={myDestinationLogo} style={styles.logo} />
@@ -53,6 +57,7 @@ const SignUpScreen = () => {
   );
 };
 
+// Styles for the SignUpScreen component
 const styles = StyleSheet.create({
   container: {
     flex: 1,

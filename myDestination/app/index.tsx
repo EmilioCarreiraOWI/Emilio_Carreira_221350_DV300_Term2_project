@@ -11,6 +11,7 @@ import HomeScreen from "../Screens/HomeScreen";
 import SearchScreen from "../Screens/searchScreen";
 import ProfileScreen from "@/Screens/ProfileScreen";
 import ActivityScreen from "@/Screens/ActivityScreen";
+import CreateActivityScreen from "@/Screens/CreateActivityScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -86,6 +87,9 @@ export default function Index() {
             case 'Search':
               iconName = focused ? 'search' : 'search-outline';
               break;
+            case 'CreateActivity':
+              iconName = focused ? 'add' : 'add-outline';
+              break;
             case 'Activity':
               iconName = focused ? 'pulse' : 'pulse-outline';
               break;
@@ -105,6 +109,7 @@ export default function Index() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Search" component={SearchScreen} options={{ tabBarLabel: 'Search' }} />
+      <Tab.Screen name="CreateActivity" component={CreateActivityScreen} options={{ tabBarLabel: 'Create Activity' }} />
       <Tab.Screen name="Activity" component={ActivityScreen} options={{ tabBarLabel: 'Activity' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>

@@ -1,27 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 import MapView from 'react-native-maps';
-import ProfileCover1 from '../assets/images/profile-cover1.jpg';
-import User1 from '../assets/images/user1.jpg';
+import { useRoute } from '@react-navigation/native';
+import { getMyBucketList } from '../services/dbService';
 
 const ActivityScreen = () => {
+  const route = useRoute();
+  const [activityData, setActivityData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchActivityData = async () => {
+      try {
+        const activities = await getMyBucketList();
+        const activity = activities.find(act => act.id === route.params?.id);
+        if (activity) {
+          setActivityData(activity);
+        } else {
+          setError('Activity not found');
+        }
+      } catch (e) {
+        setError('Failed to fetch activity data');
+        console.error(e);
+      }
+      setIsLoading(false);
+    };
+
+    fetchActivityData();
+  }, [route.params?.id]);
+
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text>Error: {error}</Text>;
+  }
+
+  if (!activityData) {
+    return <Text>No activity data available.</Text>;
+  }
+
   return (
     <View style={styles.container}>
       {/* Background image with user profile and activity details */}
       <ImageBackground 
-        source={ProfileCover1} 
+        source={{ uri: activityData.profileCoverUrl }} 
         style={styles.profileContainer}
         resizeMode="cover"
       >
         {/* User profile image */}
         <Image 
-          source={User1} 
+          source={{ uri: activityData.userImageUrl }} 
           style={styles.profileImage}
         />
         {/* User name */}
-        <Text style={styles.profileName}>John Doe</Text>
+        <Text style={styles.profileName}>{activityData.userName}</Text>
         {/* User activity type */}
-        <Text style={styles.userActivity}>Mountain Hiking</Text>
+        <Text style={styles.userActivity}>{activityData.activityName}</Text>
       </ImageBackground>
       {/* Map and additional activity information */}
       <View style={styles.mapContainer}>
@@ -29,24 +66,23 @@ const ActivityScreen = () => {
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: -25.7479,
-            longitude: 28.2293,
+            latitude: activityData.route[0].latitude,
+            longitude: activityData.route[0].longitude,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
         />
         {/* Activity details like distance, duration, and difficulty */}
         <View style={styles.mainInfo}>
-          <Text style={styles.infoText}>Distance: 8 km</Text>
-          <Text style={styles.infoText}>Duration: 3 hours</Text>
-          <Text style={styles.infoText}>Difficulty: Moderate</Text>
-          
+          <Text style={styles.infoText}>Distance: {activityData.totalDistance} km</Text>
+          <Text style={styles.infoText}>Duration: {activityData.time} min</Text>
+          <Text style={styles.infoText}>Difficulty: {activityData.difficulty}</Text>
         </View>
         {/* Additional activity details like location, date, and type */}
         <View style={styles.mainInfo}>
-          <Text style={styles.infoText}>Location: Mount Kilimanjaro</Text>
-          <Text style={styles.infoText}>Date: 10/05/2024</Text>
-          <Text style={styles.infoText}>Type: Hiking</Text>
+          <Text style={styles.infoText}>Location: {activityData.location}</Text>
+          <Text style={styles.infoText}>Date: {activityData.date}</Text>
+          <Text style={styles.infoText}>Type: {activityData.type}</Text>
         </View>
       </View>
       {/* Description of the activity */}
@@ -55,7 +91,7 @@ const ActivityScreen = () => {
           <Text style={styles.headingText}>Description</Text>
         </View>
         <Text style={styles.descriptionText}>
-          Join John Doe on his latest adventure, mountain hiking! Experience the thrill and beauty of the mountains.
+          {activityData.description}
         </Text>
       </View>
       

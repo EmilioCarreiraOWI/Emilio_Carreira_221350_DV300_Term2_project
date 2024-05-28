@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, FlatList, Text, Image } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { listAllUsers } from '../services/authService';
 
 // Define the User interface
 interface User {
   id: string;
   name: string;
-  image: any;
+  image: any; // Consider specifying a more precise type, e.g., string for URLs
   activity: string;
 }
 
@@ -25,22 +26,26 @@ const activityColors: { [key: string]: string } = {
 };
 
 const SearchScreen = () => {
-  // State for handling search input
+  // State for handling search input and users
   const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
 
-  // Static user data
-  const users: User[] = [
-    { id: '1', name: 'John Doe', image: require('../assets/images/user1.jpg'), activity: 'Mountain Hiking' },
-    { id: '2', name: 'Jane Smith', image: require('../assets/images/user2.jpg'), activity: 'Scuba Diving' },
-    { id: '3', name: 'William Johnson', image: require('../assets/images/user3.jpg'), activity: 'Safari Adventure' },
-    { id: '4', name: 'Emily Clark', image: require('../assets/images/user4.jpg'), activity: 'Skydiving' },
-    { id: '5', name: 'Michael Brown', image: require('../assets/images/user5.jpg'), activity: 'City Tours' },
-    { id: '6', name: 'Linda Gates', image: require('../assets/images/user6.jpg'), activity: 'Snowboarding' },
-    { id: '7', name: 'Robert Lee', image: require('../assets/images/user7.jpg'), activity: 'Desert Safari' },
-    { id: '8', name: 'Jessica Taylor', image: require('../assets/images/user8.jpg'), activity: 'Deep Sea Fishing' },
-    { id: '9', name: 'Daniel Young', image: require('../assets/images/user9.jpg'), activity: 'Cycling' },
-    { id: '10', name: 'Laura White', image: require('../assets/images/user10.jpg'), activity: 'Rock Climbing' },
-  ];
+  // Fetch users from Firebase on component mount
+  useEffect(() => {
+    const loadUsers = async () => {
+      const fetchedUsers = await listAllUsers();
+      if (fetchedUsers && fetchedUsers.length > 0) {
+        const usersWithFullDetails = fetchedUsers.map((user: User) => ({
+          ...user,
+          name: user.name || 'Default Name',
+          image: user.image || 'Default Image URL',
+          activity: user.activity || 'Default Activity'
+        }));
+        setUsers(usersWithFullDetails);
+      }
+    };
+    loadUsers();
+  }, []);
 
   // Filter users based on search query
   const filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -48,7 +53,7 @@ const SearchScreen = () => {
   // Render each user as a card
   const renderItem = ({ item }: { item: User }) => (
     <View style={styles.card}>
-      <Image source={item.image} style={styles.cardImage} />
+      <Image source={{ uri: item.image }} style={styles.cardImage} />
       <Text style={styles.cardText}>{item.name} - </Text>
       <Text style={[styles.cardActivity, { color: activityColors[item.activity] }]}>{item.activity}</Text>
     </View>

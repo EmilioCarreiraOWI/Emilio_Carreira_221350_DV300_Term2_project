@@ -12,6 +12,7 @@ import SearchScreen from "../Screens/searchScreen";
 import ProfileScreen from "@/Screens/ProfileScreen";
 import ActivityScreen from "@/Screens/ActivityScreen";
 import CreateActivityScreen from "@/Screens/CreateActivityScreen";
+import AppNavigator from '../components/navigation/AppNavigator';
 
 const Tab = createBottomTabNavigator();
 

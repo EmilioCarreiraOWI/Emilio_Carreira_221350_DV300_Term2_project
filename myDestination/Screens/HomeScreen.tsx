@@ -1,60 +1,55 @@
-import React, { useState } from 'react';
-import { View, Image, ScrollView, StyleSheet, Text, TextInput } from 'react-native'; // Added TextInput to imports
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, Image, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import MapView, { Polyline } from 'react-native-maps';
+import { getMyBucketList } from '../services/dbService';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
+import { useNavigation } from '@react-navigation/native';
+
+interface CardData {
+  activityName: string;
+  description: string;
+  id: string;
+  userId: string;
+  location: string;
+  route: { latitude: number; longitude: number }[];
+  totalDistance: number; // in kilometers
+  averageSpeed: number; // in km/h
+  time: number; // in minutes
+}
 
 const HomeScreen = () => {
-  // State for handling search input
-  const [searchQuery, setSearchQuery] = useState('');
+  const [cardData, setCardData] = useState<CardData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation();
 
-  // Data for adventure cards
-  const cardData = [
-    {
-      image: require('../assets/images/card1.jpg'),
-      title: 'Mountain Hiking',
-      description: 'Explore the best mountain trails with guided hiking tours.'
-    },
-    {
-      image: require('../assets/images/card2.jpg'),
-      title: 'Scuba Diving',
-      description: 'Dive into the blue waters and discover the marine life.'
-    },
-    {
-      image: require('../assets/images/card3.jpg'),
-      title: 'Safari Adventure',
-      description: 'Get close to wildlife with our exclusive safari packages.'
-    },
-    {
-      image: require('../assets/images/card4.jpg'),
-      title: 'Skydiving',
-      description: 'Experience the thrill of skydiving with certified instructors.'
-    },
-    {
-      image: require('../assets/images/card5.jpg'),
-      title: 'City Tours',
-      description: 'Discover the rich history and culture of iconic cities around the world.'
-    },
-    {
-      image: require('../assets/images/card6.jpg'),
-      title: 'Snowboarding',
-      description: 'Hit the slopes with our exciting snowboarding adventures.'
-    },
-    {
-      image: require('../assets/images/card7.jpg'),
-      title: 'Desert Safari',
-      description: 'Explore the vast deserts and experience traditional Bedouin life.'
-    },
-    {
-      image: require('../assets/images/card8.jpg'),
-      title: 'Deep Sea Fishing',
-      description: 'Catch the biggest fish and enjoy thrilling deep sea fishing trips.'
-    }
-  ];
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const activities = await getMyBucketList();
+        setCardData(activities);
+        setError(null);
+      } catch (e) {
+        setError('Failed to fetch activities');
+        console.error(e);
+      }
+      setIsLoading(false);
+    };
 
-  // Filtering card data based on search query
-  const filteredCardData = cardData.filter(card =>
-    card.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    fetchActivities();
+  }, []);
+
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
+
+  if (error) {
+    return <Text>Error: {error}</Text>;
+  }
+
+  const handleCardPress = (id: string) => {
+    navigation.navigate('ActivityScreen', { id });
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -66,28 +61,42 @@ const HomeScreen = () => {
         </Text>
       </View>
 
-      {/* Search input for filtering activities */}
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search for an activity..."
-        placeholderTextColor="#ccc"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-
-      <View style={styles.cardRow}>
-        {/* Displaying filtered adventure cards */}
-        {filteredCardData.map((card, index) => (
-          <View key={index} style={styles.cardContainer}>
-            <Image source={card.image} style={styles.cardImage} />
-            <View style={styles.cardTextContainer}>
-              <Text style={styles.cardTitle}>{card.title}</Text>
-              <Text style={styles.cardDescription}>{card.description}</Text>
+      <View style={styles.cardsWrapper}>
+        {cardData.map((card, index) => (
+          <TouchableOpacity key={card.id} style={styles.cardContainer} onPress={() => handleCardPress(card.id)}>
+            <Text style={styles.cardTitle}>{card.activityName}</Text>
+            <View style={styles.cardStatsContainer}>
+              <Text style={styles.cardStats}>{card.location}</Text>
+              <Text style={styles.cardStats}>{card.totalDistance} km</Text>
+              <Text style={styles.cardStats}>{card.time} min</Text>
             </View>
-          </View>
+            
+            {card.route && card.route.length > 0 ? (
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: (card.route.reduce((acc, cur) => acc + cur.latitude, 0) / card.route.length),
+                  longitude: (card.route.reduce((acc, cur) => acc + cur.longitude, 0) / card.route.length),
+                  latitudeDelta: Math.max(...card.route.map(point => point.latitude)) - Math.min(...card.route.map(point => point.latitude)) + 0.0005,
+                  longitudeDelta: Math.max(...card.route.map(point => point.longitude)) - Math.min(...card.route.map(point => point.longitude)) + 0.0005,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+              >
+                <Polyline
+                  coordinates={card.route}
+                  strokeColor="#FFCE1C" // fallback for when `strokeColors` is not supported by the map-provider
+                  strokeWidth={6}
+                />
+              </MapView>
+            ) : (
+              <Text>No route data available</Text>
+            )}
+          </TouchableOpacity>
         ))}
       </View>
-
     </ScrollView>
   );
 };
@@ -126,53 +135,58 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
   },
-  searchBar: {
-    height: 50,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-    backgroundColor: '#3C3E47',
-    borderColor: '#108DF9',
-    borderWidth: 1,
-    borderRadius: 20,
-    fontSize: 16,
-    color: '#fff',
-  },
-  cardRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
+  cardsWrapper: {
+    alignItems: 'center',
   },
   cardContainer: {
-    width: '45%', // Adjust width for two cards per row
+    marginBottom: 20,
+    padding: 10,
     backgroundColor: '#3C3E47',
+    borderRadius: 25,
+    width: '90%',
+    display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 0, // Padding set to 0 to allow image to fill the container
-    borderRadius: 25,
-    marginBottom: 20,
-    overflow: 'hidden', // Ensures the image does not bleed outside the border radius
-  },
-  cardImage: {
-    width: '100%',
-    height: 120, // Height adjusted to 100% to fill the container
-    resizeMode: 'cover', // Changed to 'cover' to crop and fit the image in the container
-  },
-  cardTextContainer: {
-    marginTop: 10,
-    alignItems: 'flex-start',
-    padding: 10,
-    width: '90%',
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#108DF9',
+    marginBottom: 10,
+  },
+  cardStatsContainer:{
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
+    borderColor: '#F3C94F',
+    padding: 15,
+    width: '100%',
+    backgroundColor: '#3C3E47',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cardStats: {
+    color: '#fff',
+    fontSize: 20,
   },
   cardDescription: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#fff',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  mapContainer: {
+    width: '100%',
+    overflow: 'hidden',
+    borderRadius: 12
+  },
+  map: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+    
   },
 });
 
 export default HomeScreen;
+

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import MapView, { Polyline, Marker } from 'react-native-maps';
+import MapView, { Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { LocationObject } from 'expo-location';
 import { LocationSubscription } from 'expo-location';
 import haversine from 'haversine';
+import { createNewBucketActivity } from '../services/dbService'; // Import the function to save activity to Firestore
+import { getAuth } from 'firebase/auth';
 
 // Define a type for the route coordinates
 type RouteCoordinate = {
@@ -88,10 +90,14 @@ const CreateActivityScreen = () => {
     if (subscription) {
       subscription.remove();
       setSubscription(null);
-      setIsRecording(false);
-      setRoute([]); // Clear the recorded route
-      setModalVisible(false); // Hide modal
     }
+    setIsRecording(false);
+    setRoute([]); // Clear the recorded route
+    setModalVisible(false); // Hide modal
+    setActivityName(''); // Reset activity name
+    setLocation(''); // Reset location
+    setDescription(''); // Reset description
+    setStartTime(null); // Reset start time
   };
 
   // Function to resume recording the route
@@ -128,6 +134,53 @@ const CreateActivityScreen = () => {
 
   // Check if all input fields are filled
   const allFieldsFilled = activityName && location && description && route.length > 0;
+
+  // Function to save activity to Firestore and reset state
+  const saveActivity = async () => {
+    if (!allFieldsFilled) {
+      console.error('Please fill all fields before saving.');
+      return;
+    }
+
+    // Get current user
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('No user logged in');
+      return;
+    }
+
+    const activityData = {
+      userId: user.uid, // Include the user's ID
+      activityName,
+      location,
+      description,
+      route,
+      startTime,
+      endTime: new Date(),
+      totalDistance: calculateTotalKilometers(),
+      averageSpeed: calculateAverageSpeed()
+    };
+
+    try {
+      const success = await createNewBucketActivity(activityData); // Save to Firestore
+      if (success) {
+        console.log('Activity saved successfully');
+      } else {
+        console.error('Failed to save activity');
+      }
+    } catch (error) {
+      console.error('Error saving activity:', error);
+    }
+    // Reset all fields after saving
+    setModalVisible(false);
+    setIsRecording(false);
+    setRoute([]);
+    setActivityName('');
+    setLocation('');
+    setDescription('');
+    setStartTime(null);
+  };
 
   // Render the input fields, map view for recording route, and create button
   return (
@@ -191,7 +244,7 @@ const CreateActivityScreen = () => {
             </View>
             <TextInput
               style={styles.input}
-              placeholder="Activity Name"
+              placeholder="Activity Title"
               placeholderTextColor="#ccc"
               value={activityName}
               onChangeText={setActivityName}
@@ -220,10 +273,7 @@ const CreateActivityScreen = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.buttonPrimary}
-                    onPress={() => {
-                        console.log('Activity Created');
-                        setModalVisible(!modalVisible);
-                    }}
+                    onPress={saveActivity}
                     disabled={!allFieldsFilled}
                     >
                     <Text style={styles.buttonText}>Save</Text>
@@ -276,18 +326,16 @@ const styles = StyleSheet.create({
     borderTopColor: '#FFCE1C',
   },
 currentContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 10,
-    borderRadius: 25,
-    borderColor: '#108DF9',
-    borderWidth: 3,
-    padding: 15,
-    backgroundColor: '#3C3E47',
-    color: '#fff',
+  borderTopWidth: 3,
+  borderBottomWidth: 3,
+  borderColor: '#F3C94F',
+  padding: 15,
+  width: '100%',
+  backgroundColor: '#3C3E47',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: 20
   },
   currentText: {
     color: '#fff',
@@ -402,6 +450,7 @@ currentContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
+
 });
 
 export default CreateActivityScreen;

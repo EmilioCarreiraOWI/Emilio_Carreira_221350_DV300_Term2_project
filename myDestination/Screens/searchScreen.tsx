@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, FlatList, Text, Image } from 'react-native';
 import { Colors } from '../constants/Colors';
-import { listAllUsers } from '../services/authService';
+import { auth } from '../config/firebaseConfig';
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { fetchAllUsers } from '../services/authService'; // Import fetchAllUsers function
 
 // Define the User interface
 interface User {
@@ -30,25 +32,21 @@ const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
 
-  // Fetch users from Firebase on component mount
+  // Fetch all users from Firebase on component mount
   useEffect(() => {
-    const loadUsers = async () => {
-      const fetchedUsers = await listAllUsers();
-      if (fetchedUsers && fetchedUsers.length > 0) {
-        const usersWithFullDetails = fetchedUsers.map((user: User) => ({
-          ...user,
-          name: user.name || 'Default Name',
-          image: user.image || 'Default Image URL',
-          activity: user.activity || 'Default Activity'
-        }));
-        setUsers(usersWithFullDetails);
-      }
+    const fetchUsers = async () => {
+      const fetchedUsers = await fetchAllUsers();
+      const usersFormatted = fetchedUsers.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        image: user.image,
+        activity: user.activity
+      }));
+      setUsers(usersFormatted);
     };
-    loadUsers();
-  }, []);
 
-  // Filter users based on search query
-  const filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    fetchUsers();
+  }, []);
 
   // Render each user as a card
   const renderItem = ({ item }: { item: User }) => (
@@ -69,9 +67,9 @@ const SearchScreen = () => {
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
-      <Text style={styles.title}>{filteredUsers.length === 1 ? `${filteredUsers[0].name} - ${filteredUsers[0].activity}` : "All the users"}</Text>
+      <Text style={styles.title}>All the users</Text>
       <FlatList
-        data={filteredUsers}
+        data={users}
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, Button, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { signOut, getAuth, onAuthStateChanged } from 'firebase/auth';
@@ -8,6 +8,7 @@ import '../config/firebaseConfig'; // Adjust the path to where Firebase is initi
 
 import ProfileCover from '../assets/images/profile-cover2.jpg'; // Correct path to the image
 import User1 from '../assets/images/user1.jpg'; // Correct path to the image
+import { getMyBucketList } from '../services/dbService'; // Import getMyBucketList from dbService
 
 const auth = getAuth(); // Ensure this is called after Firebase has been initialized
 
@@ -18,6 +19,18 @@ type RootStackParamList = {
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
+interface Activity {
+  activityName: string;
+  description: string;
+  id: string;
+  userId: string;
+  location: string;
+  route: { latitude: number; longitude: number }[];
+  totalDistance: number; // in kilometers
+  averageSpeed: number; // in km/h
+  time: number; // in minutes
+}
+
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const [currentUser, setCurrentUser] = useState<User | null>(null); // Use User | null type for currentUser
@@ -25,6 +38,7 @@ const ProfileScreen = () => {
   const [profileName, setProfileName] = useState(''); // State to hold profile name input
   const [profileImage, setProfileImage] = useState(User1); // State to hold profile image input
   const [userRole, setUserRole] = useState(''); // State to hold user role input
+  const [userActivities, setUserActivities] = useState<Activity[]>([]); // State to hold user activities
 
   // Effect to handle user authentication state changes
   useEffect(() => {
@@ -33,12 +47,19 @@ const ProfileScreen = () => {
         setCurrentUser(user);
         setProfileName(user.displayName || ''); // Initialize profileName with current user's displayName
         setUserRole('Explorer'); // Default role or fetched from user data
+        fetchUserActivities();
       } else {
         setCurrentUser(null);
       }
     });
     return unsubscribe;
   }, []);
+
+  // Fetch user activities from the database
+  const fetchUserActivities = async () => {
+    const activities = await getMyBucketList();
+    setUserActivities(activities.filter(activity => activity.userId === currentUser?.uid));
+  };
 
   // Function to extract display name from email
   const getDisplayName = (email: string | null) => {
@@ -60,6 +81,20 @@ const ProfileScreen = () => {
         <Text style={styles.profileName}>{currentUser ? getDisplayName(currentUser.email) : 'No User'}</Text>
         <Text style={styles.userActivity}>Mountain Hiking</Text>
       </ImageBackground>
+
+      {/* List of user activities */}
+      <View style={styles.cardsWrapper}>
+        {userActivities.map((activity, index) => (
+          <TouchableOpacity key={activity.id} style={styles.cardContainer} onPress={() => console.log('Activity selected:', activity.id)}>
+            <Text style={styles.cardTitle}>{activity.activityName}</Text>
+            <View style={styles.cardStatsContainer}>
+              <Text style={styles.cardStats}>{activity.location}</Text>
+              <Text style={styles.cardStats}>{activity.totalDistance} km</Text>
+              <Text style={styles.cardStats}>{activity.time} min</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* Edit profile button */}
       <TouchableOpacity style={styles.EditSection} onPress={() => setModalVisible(true)}>
@@ -102,7 +137,6 @@ const ProfileScreen = () => {
             />
 
             <View style={styles.buttonContainer}>
-
               <TouchableOpacity style={styles.buttonSeconday} onPress={() => setModalVisible(!modalVisible)}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
@@ -169,6 +203,34 @@ const styles = StyleSheet.create({
   userActivity: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#fff',
+  },
+  cardsWrapper: {
+    alignItems: 'center',
+  },
+  cardContainer: {
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#3C3E47',
+    borderRadius: 25,
+    width: '90%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#108DF9',
+    marginBottom: 10,
+  },
+  cardStatsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  cardStats: {
+    fontSize: 16,
     color: '#fff',
   },
   editProfileText: { // Added missing style for editProfileText
@@ -245,7 +307,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: { // Added style for button container
     display: 'flex',
-    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',

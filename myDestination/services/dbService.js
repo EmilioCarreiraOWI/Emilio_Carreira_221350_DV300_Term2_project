@@ -22,7 +22,7 @@ export const getMyBucketList = async() => {
   // Check if the querySnapshot is not empty
   if (!querySnapshot.empty) {
     querySnapshot.forEach((doc) => {
-      console.log("Document data:", doc.data());
+      // console.log("Document data:", doc.data());
       // Push each document's data into the allActivities array
       allActivities.push({
         activityName: doc.data().activityName,

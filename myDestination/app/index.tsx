@@ -12,7 +12,6 @@ import SearchScreen from "../Screens/searchScreen";
 import ProfileScreen from "@/Screens/ProfileScreen";
 import ActivityScreen from "@/Screens/ActivityScreen";
 import CreateActivityScreen from "@/Screens/CreateActivityScreen";
-import AppNavigator from '../components/navigation/AppNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -63,9 +62,9 @@ export default function Index() {
             }
             return <Ionicons name={iconName as any} size={size} color={color} />;
           },
-          tabBarActiveTintColor: '#F3C94F',
-          tabBarInactiveTintColor: '#108DF9B3',
-          tabBarStyle: { backgroundColor: '#000' },
+          tabBarActiveTintColor: '#FFF',
+          tabBarInactiveTintColor: '#323232',
+          tabBarStyle: { backgroundColor: '#108DF9' },
           headerShown: false
         })}
       >
@@ -102,9 +101,9 @@ export default function Index() {
           }
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#F3C94F',
-        tabBarInactiveTintColor: '#108DF9B3',
-        tabBarStyle: { backgroundColor: '#000' },
+        tabBarActiveTintColor: '#FFF',
+        tabBarInactiveTintColor: '#323232',
+        tabBarStyle: { backgroundColor: '#108DF9' },
         headerShown: false
       })}
     >
@@ -114,5 +113,9 @@ export default function Index() {
       <Tab.Screen name="Activity" component={ActivityScreen} options={{ tabBarLabel: 'Activity' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
+
+
   );
 }
+
+

@@ -4,6 +4,8 @@ import MapView, { Polyline } from 'react-native-maps';
 import { getMyBucketList } from '../services/dbService';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 import { useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from 'path_to_your_types_file'; // Adjust the import path as necessary
+import { StackNavigationProp } from '@react-navigation/stack';
 
 interface CardData {
   activityName: string;
@@ -21,7 +23,7 @@ const HomeScreen = () => {
   const [cardData, setCardData] = useState<CardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'HomeScreen'>>();
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -184,6 +186,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     resizeMode: 'cover',
+    
     
   },
 });

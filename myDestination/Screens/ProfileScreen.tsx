@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { signOut, getAuth, onAuthStateChanged } from 'firebase/auth';
-import { User } from 'firebase/auth'; // Import User type from firebase/auth
-import '../config/firebaseConfig'; // Adjust the path to where Firebase is initialized
+import { signOut, getAuth, onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { updateUserInformation } from '../services/authService';
+import { User } from 'firebase/auth';
+import '../config/firebaseConfig';
+import { doc, updateDoc, getFirestore } from 'firebase/firestore';
 
 import ProfileCover from '../assets/images/profile-cover2.jpg'; // Correct path to the image
 import User1 from '../assets/images/user1.jpg'; // Correct path to the image
 import { getMyBucketList } from '../services/dbService'; // Import getMyBucketList from dbService
 
 const auth = getAuth(); // Ensure this is called after Firebase has been initialized
+const db = getFirestore(); // Initialize Firestore
 
 type RootStackParamList = {
   SignInScreen: undefined;
@@ -64,6 +67,34 @@ const ProfileScreen = () => {
   // Function to extract display name from email
   const getDisplayName = (email: string | null) => {
     return email ? email.split('@')[0] : 'No User';
+  };
+
+  // Save profile changes function
+  const saveProfileChanges = async () => {
+    if (currentUser) {
+      try {
+        // Update the authentication profile
+        await updateProfile(currentUser, {
+          displayName: profileName,
+          photoURL: profileImage
+        }).then(() => {
+          // Update the local state to reflect the changes
+          setCurrentUser({...currentUser, displayName: profileName, photoURL: profileImage});
+
+          // Update additional fields in Firestore
+          const userDocRef = doc(db, "users", currentUser.uid);
+          updateDoc(userDocRef, {
+            role: userRole,
+            profileName: profileName,
+            profileImage: profileImage
+          });
+        }).catch((error) => {
+          console.error('Failed to update profile', error);
+        });
+      } catch (error) {
+        console.error('Failed to update profile', error);
+      }
+    }
   };
 
   // Main profile screen layout
@@ -141,10 +172,7 @@ const ProfileScreen = () => {
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.buttonPrimary} onPress={() => {
-                  // Save the profile name, image, and role
-                  setModalVisible(!modalVisible);
-                }}>
+              <TouchableOpacity style={styles.buttonPrimary} onPress={saveProfileChanges}>
                 <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
             

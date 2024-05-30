@@ -4,7 +4,7 @@ import MapView, { Polyline } from 'react-native-maps';
 import { getMyBucketList } from '../services/dbService';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from 'path_to_your_types_file'; // Adjust the import path as necessary
+import { RootStackParamList } from '../app/index';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 interface CardData {
@@ -19,11 +19,13 @@ interface CardData {
   time: number; // in minutes
 }
 
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+
 const HomeScreen = () => {
   const [cardData, setCardData] = useState<CardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'HomeScreen'>>();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -52,6 +54,8 @@ const HomeScreen = () => {
   const handleCardPress = (id: string) => {
     navigation.navigate('ActivityScreen', { id });
   };
+
+  
 
   return (
     <ScrollView style={styles.container}>

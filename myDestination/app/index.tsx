@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { onAuthStateChanged } from "firebase/auth";
 import { getAuth } from "firebase/auth";
+import Logo from '../assets/images/myDestinationLogo.png';
 import SplashScreen from "../Screens/SplashScreen";
 import SignInScreen from "../Screens/SignInScreen";
 import SignUpScreen from "../Screens/SignUpScreen";
@@ -13,7 +15,45 @@ import ProfileScreen from "@/Screens/ProfileScreen";
 import ActivityScreen from "@/Screens/ActivityScreen";
 import CreateActivityScreen from "@/Screens/CreateActivityScreen";
 
+export type RootStackParamList = {
+  Home: undefined;
+  ActivityScreen: { id: string };
+};
+
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
+
+function HomeStack() {
+  return (
+      <Stack.Navigator
+        screenOptions={{
+          headerTitle: () => <LogoTitle />,
+          headerStyle: { backgroundColor: '#108DF9' },
+          headerTintColor: '#FFF',
+          headerTitleStyle: { fontWeight: 'bold' }
+        }}
+        initialRouteName="Home"
+      >
+        <Stack.Screen 
+          name="Home" 
+          component={HomeScreen}
+        />
+        <Stack.Screen 
+          name="ActivityScreen" 
+          component={ActivityScreen}
+        />
+      </Stack.Navigator>
+  );
+}
+
+function LogoTitle() {
+  return (
+    <Image
+      style={{ width: 50, height: 50 }}
+      source={Logo}
+    />
+  );
+}
 
 export default function Index() {
   const [showSplash, setShowSplash] = useState(true);
@@ -81,7 +121,7 @@ export default function Index() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           switch (route.name) {
-            case 'Home':
+            case 'HomeStack':
               iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Search':
@@ -89,9 +129,6 @@ export default function Index() {
               break;
             case 'CreateActivity':
               iconName = focused ? 'add' : 'add-outline';
-              break;
-            case 'Activity':
-              iconName = focused ? 'pulse' : 'pulse-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -107,15 +144,13 @@ export default function Index() {
         headerShown: false
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
+      <Tab.Screen name="HomeStack" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Search" component={SearchScreen} options={{ tabBarLabel: 'Search' }} />
       <Tab.Screen name="CreateActivity" component={CreateActivityScreen} options={{ tabBarLabel: 'Create Activity' }} />
-      <Tab.Screen name="Activity" component={ActivityScreen} options={{ tabBarLabel: 'Activity' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
-
-
   );
 }
+
 
 

@@ -1,34 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Polyline } from 'react-native-maps'; // Import Polyline for drawing routes
 import { useRoute } from '@react-navigation/native';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../app/index'; // Adjust the import path as necessary
 import { getMyBucketList } from '../services/dbService';
 
+interface Activity {
+  id: string;
+  profileCoverUrl: string;
+  userImageUrl: string;
+  userName: string;
+  activityName: string;
+  route: { latitude: number; longitude: number }[];
+  totalDistance: number;
+  time: number;
+  difficulty: string;
+  location: string;
+  date: string;
+  type: string;
+  description: string;
+}
+
+type ActivityScreenRouteProp = RouteProp<RootStackParamList, 'ActivityScreen'>;
+
 const ActivityScreen = () => {
-  const route = useRoute();
-  const [activityData, setActivityData] = useState(null);
+  const route = useRoute<ActivityScreenRouteProp>();
+  const { id } = route.params;
+  const [activityData, setActivityData] = useState<Activity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchActivityData = async () => {
       try {
         const activities = await getMyBucketList();
-        const activity = activities.find(act => act.id === route.params?.id);
+        const activity = activities.find((act: Activity) => act.id === id);
         if (activity) {
           setActivityData(activity);
         } else {
           setError('Activity not found');
         }
       } catch (e) {
-        setError('Failed to fetch activity data');
+        setError("Failed to fetch activity data");
         console.error(e);
       }
       setIsLoading(false);
     };
 
     fetchActivityData();
-  }, [route.params?.id]);
+  }, [id]);
 
   if (isLoading) {
     return <Text>Loading...</Text>;
@@ -60,26 +81,30 @@ const ActivityScreen = () => {
         {/* User activity type */}
         <Text style={styles.userActivity}>{activityData.activityName}</Text>
       </ImageBackground>
-      {/* Map and additional activity information */}
+      {/* Map and activity information */}
       <View style={styles.mapContainer}>
-        {/* Map view showing location */}
+        {/* Map view showing location and user activity route */}
         <MapView
           style={styles.map}
           initialRegion={{
             latitude: activityData.route[0].latitude,
             longitude: activityData.route[0].longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            latitudeDelta: 0.0005,
+            longitudeDelta: 0.0005,
           }}
-        />
-        {/* Activity details like distance, duration, and difficulty */}
+        >
+          {/* Polyline to show the route taken in the activity */}
+          <Polyline
+            coordinates={activityData.route}
+            strokeColor="#FFCE1C" // red color for the route
+            strokeWidth={6}
+          />
+        </MapView>
+        {/* Combined activity details */}
         <View style={styles.mainInfo}>
           <Text style={styles.infoText}>Distance: {activityData.totalDistance} km</Text>
           <Text style={styles.infoText}>Duration: {activityData.time} min</Text>
           <Text style={styles.infoText}>Difficulty: {activityData.difficulty}</Text>
-        </View>
-        {/* Additional activity details like location, date, and type */}
-        <View style={styles.mainInfo}>
           <Text style={styles.infoText}>Location: {activityData.location}</Text>
           <Text style={styles.infoText}>Date: {activityData.date}</Text>
           <Text style={styles.infoText}>Type: {activityData.type}</Text>
@@ -147,13 +172,14 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#3C3E47',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
   },
   infoText: {
     color: '#fff',
     fontSize: 20,
-    marginVertical: 'auto',
+    marginVertical: 5,
   },
   headingContainer: {
     width: '100%',

@@ -7,6 +7,7 @@ import { LocationSubscription } from 'expo-location';
 import haversine from 'haversine';
 import { createNewBucketActivity } from '../services/dbService'; // Import the function to save activity to Firestore
 import { getAuth } from 'firebase/auth';
+import { Picker } from '@react-native-picker/picker';
 
 // Define a type for the route coordinates
 type RouteCoordinate = {
@@ -20,6 +21,8 @@ const CreateActivityScreen = () => {
   const [activityName, setActivityName] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const [type, setType] = useState('');
   const [route, setRoute] = useState<RouteCoordinate[]>([]); // Use the defined type for the route state
   const [currentPosition, setCurrentPosition] = useState({ latitude: 0, longitude: 0 }); // Store current position with initial values
   const [subscription, setSubscription] = useState<LocationSubscription | null>(null); // To manage the location subscription
@@ -97,6 +100,8 @@ const CreateActivityScreen = () => {
     setActivityName(''); // Reset activity name
     setLocation(''); // Reset location
     setDescription(''); // Reset description
+    setDifficulty(''); // Reset difficulty
+    setType(''); // Reset type
     setStartTime(null); // Reset start time
   };
 
@@ -133,7 +138,7 @@ const CreateActivityScreen = () => {
   };
 
   // Check if all input fields are filled
-  const allFieldsFilled = activityName && location && description && route.length > 0;
+  const allFieldsFilled = activityName && location && description && difficulty && type && route.length > 0;
 
   // Function to save activity to Firestore and reset state
   const saveActivity = async () => {
@@ -155,6 +160,8 @@ const CreateActivityScreen = () => {
       activityName,
       location,
       description,
+      difficulty,
+      type,
       route,
       startTime,
       endTime: new Date(),
@@ -179,6 +186,8 @@ const CreateActivityScreen = () => {
     setActivityName('');
     setLocation('');
     setDescription('');
+    setDifficulty('');
+    setType('');
     setStartTime(null);
   };
 
@@ -264,6 +273,28 @@ const CreateActivityScreen = () => {
               onChangeText={setDescription}
               multiline
             />
+            <Picker
+              selectedValue={difficulty}
+              style={styles.picker}
+              onValueChange={(itemValue: string, itemIndex: number) => setDifficulty(itemValue)}
+            >
+              <Picker.Item label="Easy" value="easy" />
+              <Picker.Item label="Moderate" value="moderate" />
+              <Picker.Item label="Challenging" value="challenging" />
+              <Picker.Item label="Difficult" value="difficult" />
+              <Picker.Item label="Extreme" value="extreme" />
+            </Picker>
+            <Picker
+              selectedValue={type}
+              style={styles.picker}
+              onValueChange={(itemValue: string, itemIndex: number) => setType(itemValue)}
+            >
+              <Picker.Item label="Running" value="running" />
+              <Picker.Item label="Cycling" value="cycling" />
+              <Picker.Item label="Hiking" value="hiking" />
+              <Picker.Item label="Swimming" value="swimming" />
+              <Picker.Item label="Gym Workout" value="gym" />
+            </Picker>
             <View style={styles.buttonContainer}>
                 <TouchableOpacity
                     style={styles.buttonSeconday}
@@ -310,6 +341,17 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 'auto',
+    marginBottom: 10,
+    borderRadius: 25,
+    borderColor: '#108DF9',
+    borderWidth: 3,
+    padding: 15,
+    backgroundColor: '#3C3E47',
+    color: '#fff',
+  },
+  picker: {
+    width: '100%',
+    height: 50,
     marginBottom: 10,
     borderRadius: 25,
     borderColor: '#108DF9',

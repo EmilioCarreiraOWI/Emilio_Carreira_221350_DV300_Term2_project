@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, FlatList, Text, Image } from 'react-native';
 import { Colors } from '../constants/Colors';
-import { auth } from '../config/firebaseConfig';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { fetchAllUsers } from '../services/authService'; // Import fetchAllUsers function
+import { fetchAllUsers } from '../services/usersService'; // Import fetchAllUsers function from usersService
 
 // Define the User interface
 interface User {
   id: string;
   name: string;
-  image: any; // Consider specifying a more precise type, e.g., string for URLs
+  image: string; // Updated type to string for image URLs
   activity: string;
 }
 
@@ -32,15 +30,15 @@ const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
 
-  // Fetch all users from Firebase on component mount
+  // Fetch all users from Firebase on component mount using the updated method from usersService
   useEffect(() => {
     const fetchUsers = async () => {
       const fetchedUsers = await fetchAllUsers();
       const usersFormatted = fetchedUsers.map((user: any) => ({
         id: user.id,
-        name: user.name,
-        image: user.image,
-        activity: user.activity
+        name: user.profileName, // Updated to use profileName
+        image: user.profileImage, // Updated to use profileImage
+        activity: user.role // Updated to use role as activity
       }));
       setUsers(usersFormatted);
     };

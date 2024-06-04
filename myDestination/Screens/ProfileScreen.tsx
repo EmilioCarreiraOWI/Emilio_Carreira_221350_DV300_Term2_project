@@ -2,22 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { signOut, getAuth, onAuthStateChanged, updateProfile } from 'firebase/auth';
-import { updateUserInformation } from '../services/authService';
-import { User } from 'firebase/auth';
+import { signOut, getAuth, onAuthStateChanged } from 'firebase/auth';
+import { saveOrUpdateUserProfile, fetchAllUsers, fetchUserWithActivities } from '../services/usersService';
 import '../config/firebaseConfig';
 import { doc, updateDoc, getFirestore } from 'firebase/firestore';
 
-import ProfileCover from '../assets/images/profile-cover2.jpg'; // Correct path to the image
-import User1 from '../assets/images/user1.jpg'; // Correct path to the image
-import { getMyBucketList } from '../services/dbService'; // Import getMyBucketList from dbService
+import ProfileCover from '../assets/images/profile-cover2.jpg';
+import User1 from '../assets/images/user1.jpg';
+import { getMyBucketList } from '../services/dbService';
 
-const auth = getAuth(); // Ensure this is called after Firebase has been initialized
-const db = getFirestore(); // Initialize Firestore
+const auth = getAuth();
+const db = getFirestore();
 
 type RootStackParamList = {
   SignInScreen: undefined;
-  ProfileEditedScreen: undefined; // Added missing screen type
+  ProfileEditedScreen: undefined;
 };
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -29,28 +28,40 @@ interface Activity {
   userId: string;
   location: string;
   route: { latitude: number; longitude: number }[];
-  totalDistance: number; // in kilometers
-  averageSpeed: number; // in km/h
-  time: number; // in minutes
+  totalDistance: number;
+  averageSpeed: number;
+  time: number;
+}
+
+interface ExtendedUser {
+  uid: string;
+  role?: string;
+  profileName?: string;
+  profileImage?: string;
+  email: string | null;
+  activities?: Activity[];
 }
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-  const [currentUser, setCurrentUser] = useState<User | null>(null); // Use User | null type for currentUser
-  const [modalVisible, setModalVisible] = useState(false); // State to control modal visibility
-  const [profileName, setProfileName] = useState(''); // State to hold profile name input
-  const [profileImage, setProfileImage] = useState(User1); // State to hold profile image input
-  const [userRole, setUserRole] = useState(''); // State to hold user role input
-  const [userActivities, setUserActivities] = useState<Activity[]>([]); // State to hold user activities
+  const [currentUser, setCurrentUser] = useState<ExtendedUser | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileImage, setProfileImage] = useState(User1);
+  const [userRole, setUserRole] = useState('');
+  const [userActivities, setUserActivities] = useState<Activity[]>([]);
 
-  // Effect to handle user authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser(user);
-        setProfileName(user.displayName || ''); // Initialize profileName with current user's displayName
-        setUserRole('Explorer'); // Default role or fetched from user data
-        fetchUserActivities();
+        const currentUserDetails = await fetchUserWithActivities(user.uid);
+        if (currentUserDetails) {
+          setCurrentUser(currentUserDetails);
+          setProfileName(currentUserDetails.profileName);
+          setProfileImage(currentUserDetails.profileImage);
+          setUserRole(currentUserDetails.role || 'Explorer');
+          setUserActivities(currentUserDetails.activities || []);
+        }
       } else {
         setCurrentUser(null);
       }
@@ -58,46 +69,29 @@ const ProfileScreen = () => {
     return unsubscribe;
   }, []);
 
-  // Fetch user activities from the database
-  const fetchUserActivities = async () => {
-    const activities = await getMyBucketList();
-    setUserActivities(activities.filter(activity => activity.userId === currentUser?.uid));
-  };
-
-  // Function to extract display name from email
-  const getDisplayName = (email: string | null) => {
-    return email ? email.split('@')[0] : 'No User';
-  };
-
-  // Save profile changes function
   const saveProfileChanges = async () => {
     if (currentUser) {
       try {
-        // Update the authentication profile
-        await updateProfile(currentUser, {
+        const userProfile = {
           displayName: profileName,
-          photoURL: profileImage
-        }).then(() => {
-          // Update the local state to reflect the changes
-          setCurrentUser({...currentUser, displayName: profileName, photoURL: profileImage});
+          photoURL: profileImage,
+          role: userRole,
+          email: currentUser.email
+        };
 
-          // Update additional fields in Firestore
-          const userDocRef = doc(db, "users", currentUser.uid);
-          updateDoc(userDocRef, {
-            role: userRole,
-            profileName: profileName,
-            profileImage: profileImage
-          });
-        }).catch((error) => {
-          console.error('Failed to update profile', error);
-        });
+        const success = await saveOrUpdateUserProfile(currentUser.uid, userProfile);
+        if (success) {
+          console.log('Profile updated successfully');
+          setCurrentUser({...currentUser, ...userProfile});
+        } else {
+          console.error('Failed to update profile');
+        }
       } catch (error) {
         console.error('Failed to update profile', error);
       }
     }
   };
 
-  // Main profile screen layout
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }}>
       <ImageBackground 
@@ -106,14 +100,13 @@ const ProfileScreen = () => {
         resizeMode="cover"
       >
         <Image 
-          source={profileImage} 
+          source={{ uri: currentUser?.profileImage || User1 }} 
           style={styles.profileImage}
         />
-        <Text style={styles.profileName}>{currentUser ? getDisplayName(currentUser.email) : 'No User'}</Text>
-        <Text style={styles.userActivity}>Mountain Hiking</Text>
+        <Text style={styles.profileName}>{currentUser ? currentUser.profileName || 'Finish your profile' : 'Finish your profile'}</Text>
+        <Text style={styles.userRole}>{currentUser ? currentUser.role || 'edit profile' : 'edit profile'}</Text>
       </ImageBackground>
 
-      {/* List of user activities */}
       <View style={styles.cardsWrapper}>
         {userActivities.map((activity, index) => (
           <TouchableOpacity key={activity.id} style={styles.cardContainer} onPress={() => console.log('Activity selected:', activity.id)}>
@@ -127,12 +120,10 @@ const ProfileScreen = () => {
         ))}
       </View>
 
-      {/* Edit profile button */}
       <TouchableOpacity style={styles.EditSection} onPress={() => setModalVisible(true)}>
         <Text style={styles.editProfileText}>Edit Profile</Text>
       </TouchableOpacity>
       
-      {/* Modal for editing profile */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -141,7 +132,6 @@ const ProfileScreen = () => {
           setModalVisible(!modalVisible);
         }}
       >
-
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Text style={styles.modalHeading}>Edit Profile</Text>
@@ -181,17 +171,12 @@ const ProfileScreen = () => {
         </View>
       </Modal>
 
-      {/* Sign out section */}
       <View style={styles.signOutSection}>
         <TouchableOpacity onPress={() => {
-          // Function to handle user sign out
           signOut(auth).then(() => {
-            // Sign-out successful.
-            // Optionally navigate to the sign-in screen or update the state
             navigation.navigate('SignInScreen');
             console.log(currentUser?.email + ' has been signed out.');
           }).catch((error) => {
-            // An error happened.
             console.error('Sign out error', error);
           });
         }}>
@@ -214,7 +199,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderBottomWidth: 3,
     borderColor: '#F3C94F',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)' // Added to make the image darker
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
   },
   profileImage: {
     width: 100,
@@ -228,7 +213,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  userActivity: {
+  userRole: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
@@ -261,7 +246,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  editProfileText: { // Added missing style for editProfileText
+  editProfileText: {
     fontSize: 16,
     color: '#fff',
   },
@@ -322,7 +307,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 24
   },
-  input: { // Style for the TextInput in the modal
+  input: {
     width: '100%',
     height: 60,
     marginBottom: 10,
@@ -333,13 +318,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#3C3E47',
     color: '#fff',
   },
-  buttonContainer: { // Added style for button container
+  buttonContainer: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
   },
-  buttonPrimary: { // Added missing style for button
+  buttonPrimary: {
     width: '46%',
     height: 60,
     backgroundColor: '#108DF9',
@@ -349,7 +334,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     color: 'white',
   },
-  buttonSeconday: { // Added missing style for button
+  buttonSeconday: {
     width: '46%',
     height: 60,
     borderWidth: 3,
@@ -360,7 +345,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     color: 'white',
   },
-  buttonText: { // Added missing style for buttonText
+  buttonText: {
     color: '#fff',
     textAlign: 'center',
   }

@@ -60,7 +60,6 @@ const HomeScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.introContainer}>
-        <Image source={myDestinationLogo} style={styles.logo} />
         <Text style={styles.introTitle}>My Destination</Text>
         <Text style={styles.introText}>
           Welcome to MyDestination, your ultimate travel companion app. Discover and explore the exciting adventures around the world!
@@ -120,10 +119,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F3C94F',
     borderBottomWidth: 3,
     marginBottom: 20,
-  },
-  logo: {
-    width: '40%',
-    resizeMode: 'contain',
   },
   introTitle: {
     fontSize: 40,

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, StyleSheet, FlatList, Text, Image } from 'react-native';
+import { View, TextInput, StyleSheet, FlatList, Text, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../constants/Colors';
-import { fetchAllUsers } from '../services/usersService'; // Import fetchAllUsers function from usersService
+import { fetchAllUsers } from '../services/usersService';
+import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 
 // Define the User interface
 interface User {
@@ -9,6 +12,7 @@ interface User {
   name: string;
   image: string; // Updated type to string for image URLs
   activity: string;
+  activities: Array<{ id: string; [key: string]: any }>;
 }
 
 // Define colors associated with different activities
@@ -25,34 +29,52 @@ const activityColors: { [key: string]: string } = {
   'Rock Climbing': '#A0522D' // Sienna
 };
 
+// Define the navigation stack parameters
+type RootStackParamList = {
+  DetailedUser: { userId: string };
+  // Add other screens and their parameters here
+};
+
 const SearchScreen = () => {
-  // State for handling search input and users
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  // Fetch all users from Firebase on component mount using the updated method from usersService
+  // Define fetchUsers function outside of useEffect
+  const fetchUsers = async () => {
+    const fetchedUsers = await fetchAllUsers();
+    const usersFormatted = fetchedUsers.map((user: any) => ({
+      id: user.id,
+      name: user.profileName,
+      image: user.profileImage,
+      activity: user.role,
+      activities: user.activities
+    }));
+    setUsers(usersFormatted);
+  };
+
+  // Fetch all users from Firestore on component mount
   useEffect(() => {
-    const fetchUsers = async () => {
-      const fetchedUsers = await fetchAllUsers();
-      const usersFormatted = fetchedUsers.map((user: any) => ({
-        id: user.id,
-        name: user.profileName, // Updated to use profileName
-        image: user.profileImage, // Updated to use profileImage
-        activity: user.role // Updated to use role as activity
-      }));
-      setUsers(usersFormatted);
-    };
-
     fetchUsers();
   }, []);
 
+  // Filter users based on search query
+  const filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const handleCardPress = (id: string) => {
+    navigation.navigate('DetailedUser', { userId: id });
+  };
+
   // Render each user as a card
   const renderItem = ({ item }: { item: User }) => (
-    <View style={styles.card}>
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => handleCardPress(item.id)}
+    >
       <Image source={{ uri: item.image }} style={styles.cardImage} />
       <Text style={styles.cardText}>{item.name} - </Text>
       <Text style={[styles.cardActivity, { color: activityColors[item.activity] }]}>{item.activity}</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   // Main component render
@@ -67,7 +89,7 @@ const SearchScreen = () => {
       />
       <Text style={styles.title}>All the users</Text>
       <FlatList
-        data={users}
+        data={filteredUsers}
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />
@@ -105,7 +127,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#3C3E47',
     borderRadius: 25,
     alignItems: 'center',
-   
   },
   cardImage: {
     width: 50,

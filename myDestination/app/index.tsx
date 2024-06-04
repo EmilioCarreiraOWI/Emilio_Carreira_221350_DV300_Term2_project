@@ -14,14 +14,21 @@ import SearchScreen from "../Screens/searchScreen";
 import ProfileScreen from "@/Screens/ProfileScreen";
 import ActivityScreen from "@/Screens/ActivityScreen";
 import CreateActivityScreen from "@/Screens/CreateActivityScreen";
+import DetailedUserScreen from "@/Screens/DetailedUserScreen";
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
 
 export type RootStackParamList = {
   Home: undefined;
   ActivityScreen: { id: string };
+  Profile: { userId: string };
+  DetailedUser: { userId: string };
 };
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
+const SearchStack = createStackNavigator();
+const UserActivityStack = createStackNavigator();
 
 function HomeStack() {
   return (
@@ -43,6 +50,52 @@ function HomeStack() {
           component={ActivityScreen}
         />
       </Stack.Navigator>
+  );
+}
+
+function SearchUserStack() {
+  return (
+    <SearchStack.Navigator
+      screenOptions={{
+        headerTitle: () => <LogoTitle />,
+        headerStyle: { backgroundColor: '#108DF9' },
+        headerTintColor: '#FFF',
+        headerTitleStyle: { fontWeight: 'bold' }
+      }}
+      initialRouteName="SearchUsers"
+    >
+      <SearchStack.Screen
+        name="SearchUsers"
+        component={SearchScreen}
+      />
+      <SearchStack.Screen
+        name="DetailedUser"
+        component={DetailedUserScreen}
+      />
+    </SearchStack.Navigator>
+  );
+}
+
+function UserActivityStackScreen() {
+  return (
+    <UserActivityStack.Navigator
+      screenOptions={{
+        headerTitle: () => <LogoTitle />,
+        headerStyle: { backgroundColor: '#108DF9' },
+        headerTintColor: '#FFF',
+        headerTitleStyle: { fontWeight: 'bold' }
+      }}
+      initialRouteName="DetailedUser"
+    >
+      <UserActivityStack.Screen
+        name="DetailedUser"
+        component={DetailedUserScreen}
+      />
+      <UserActivityStack.Screen
+        name="ActivityScreen"
+        component={ActivityScreen}
+      />
+    </UserActivityStack.Navigator>
   );
 }
 
@@ -124,11 +177,11 @@ export default function Index() {
             case 'HomeStack':
               iconName = focused ? 'home' : 'home-outline';
               break;
-            case 'Search':
+            case 'SearchUserStack':
               iconName = focused ? 'search' : 'search-outline';
               break;
-            case 'CreateActivity':
-              iconName = focused ? 'add' : 'add-outline';
+            case 'CreateActivityScreen':
+              iconName = focused ? 'create' : 'create-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -145,12 +198,18 @@ export default function Index() {
       })}
     >
       <Tab.Screen name="HomeStack" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Search" component={SearchScreen} options={{ tabBarLabel: 'Search' }} />
-      <Tab.Screen name="CreateActivity" component={CreateActivityScreen} options={{ tabBarLabel: 'Create Activity' }} />
+      <Tab.Screen name="SearchUserStack" component={SearchUserStack} options={{ tabBarLabel: 'Search' }} />
+      <Tab.Screen name="CreateActivityScreen" component={CreateActivityScreen} options={{ tabBarLabel: 'Create Activity' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
 }
 
+// Define the navigation parameters for each screen
+type RootStackParamList = {
+  ActivityScreen: { id: string };
+  // other screens can be added here
+};
 
-
+// Use the defined types in your component
+const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();

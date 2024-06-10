@@ -62,7 +62,7 @@ function SearchUserStack() {
         headerTintColor: '#FFF',
         headerTitleStyle: { fontWeight: 'bold' }
       }}
-      initialRouteName="SearchUsers"
+      initialRouteName="Back"
     >
       <SearchStack.Screen
         name="SearchUsers"
@@ -205,11 +205,9 @@ export default function Index() {
   );
 }
 
-// Define the navigation parameters for each screen
-type RootStackParamList = {
-  ActivityScreen: { id: string };
-  // other screens can be added here
-};
-
 // Use the defined types in your component
-const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+function SomeComponent() {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  // Component logic here
+}

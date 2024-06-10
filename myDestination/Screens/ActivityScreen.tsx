@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps'; // Import Polyline for drawing routes
-import { useRoute } from '@react-navigation/native';
-import { RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp } from '@react-navigation/native';
+
 import { RootStackParamList } from '../app/index'; // Adjust the import path as necessary
 import { getMyBucketList } from '../services/dbService';
 

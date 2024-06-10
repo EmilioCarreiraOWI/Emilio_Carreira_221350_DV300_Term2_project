@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackg
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { signOut, getAuth, onAuthStateChanged } from 'firebase/auth';
-import { saveOrUpdateUserProfile, fetchAllUsers, fetchUserWithActivities } from '../services/usersService';
+import { saveOrUpdateUserProfile, fetchAllUsers } from '../services/usersService';
+import { fetchUserWithActivities } from '../services/fetchUserWithActivities';
 import '../config/firebaseConfig';
 import { doc, updateDoc, getFirestore } from 'firebase/firestore';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 import ProfileCover from '../assets/images/profile-cover2.jpg';
 import User1 from '../assets/images/user1.jpg';
@@ -50,22 +52,48 @@ const ProfileScreen = () => {
   const [profileImage, setProfileImage] = useState(User1);
   const [userRole, setUserRole] = useState('');
   const [userActivities, setUserActivities] = useState<Activity[]>([]);
+  const [allUsers, setAllUsers] = useState<ExtendedUser[]>([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const currentUserDetails = await fetchUserWithActivities(user.uid);
-        if (currentUserDetails) {
+        const currentUserDetails = await fetchUserWithActivities(user.uid) as ExtendedUser;
+        if (currentUserDetails) {  // Check if currentUserDetails is truthy
           setCurrentUser(currentUserDetails);
-          setProfileName(currentUserDetails.profileName);
-          setProfileImage(currentUserDetails.profileImage);
+          setProfileName(currentUserDetails.profileName || ''); // Fallback to empty string if undefined
+          setProfileImage(currentUserDetails.profileImage || User1); // Fallback to default image if undefined
           setUserRole(currentUserDetails.role || 'Explorer');
           setUserActivities(currentUserDetails.activities || []);
+        } else {
+          setCurrentUser(null);
         }
       } else {
         setCurrentUser(null);
       }
     });
+
+    const fetchUsers = async () => {
+      const users = await fetchAllUsers();
+      setAllUsers(users.map(user => ({
+        ...user,
+        uid: user.id,
+        email: user.email || null,
+        activities: user.activities.map(activity => ({
+          id: activity.id,
+          activityName: activity.activityName || 'Unknown',
+          description: activity.description || 'No description',
+          userId: user.id,
+          location: activity.location || 'Unknown location',
+          route: activity.route || [],
+          totalDistance: activity.totalDistance || 0,
+          averageSpeed: activity.averageSpeed || 0,
+          time: activity.time || 0
+        }))
+      })));
+    };
+
+    fetchUsers();
+
     return unsubscribe;
   }, []);
 
@@ -80,11 +108,11 @@ const ProfileScreen = () => {
         };
 
         const success = await saveOrUpdateUserProfile(currentUser.uid, userProfile);
-        if (success) {
+        if (success.success) {
           console.log('Profile updated successfully');
           setCurrentUser({...currentUser, ...userProfile});
         } else {
-          console.error('Failed to update profile');
+          console.error('Failed to update profile', success.message);
         }
       } catch (error) {
         console.error('Failed to update profile', error);
@@ -95,7 +123,7 @@ const ProfileScreen = () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }}>
       <ImageBackground 
-        source={ProfileCover} 
+        source={{ uri: currentUser?.profileImage || User1 }} 
         style={styles.profileContainer}
         resizeMode="cover"
       >
@@ -109,7 +137,7 @@ const ProfileScreen = () => {
 
       <View style={styles.cardsWrapper}>
         {userActivities.map((activity, index) => (
-          <TouchableOpacity key={activity.id} style={styles.cardContainer} onPress={() => console.log('Activity selected:', activity.id)}>
+          <TouchableOpacity key={activity.id} style={styles.cardContainer} onPress={() => navigation.navigate('ActivityScreen', { id: activity.id })}>
             <Text style={styles.cardTitle}>{activity.activityName}</Text>
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{activity.location}</Text>
@@ -197,6 +225,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    height: 300,
     borderBottomWidth: 3,
     borderColor: '#F3C94F',
     backgroundColor: 'rgba(0, 0, 0, 0.5)'
@@ -204,9 +233,9 @@ const styles = StyleSheet.create({
   profileImage: {
     width: 100,
     height: 100,
-    borderColor: '#F3C94F',
-    borderWidth: 2,
     borderRadius: 50,
+    borderWidth: 2,
+    borderColor: '#F3C94F',
   },
   profileName: {
     fontSize: 32,
@@ -222,7 +251,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cardContainer: {
-    marginBottom: 20,
+    marginBottom: 10,
+    marginTop: 10,
     padding: 10,
     backgroundColor: '#3C3E47',
     borderRadius: 25,
@@ -238,13 +268,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardStatsContainer: {
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
+    borderColor: '#F3C94F',
+    padding: 15,
+    width: '100%',
+    backgroundColor: '#3C3E47',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
+    alignItems: 'center',
   },
   cardStats: {
-    fontSize: 16,
     color: '#fff',
+    fontSize: 20,
   },
   editProfileText: {
     fontSize: 16,

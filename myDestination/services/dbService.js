@@ -1,11 +1,12 @@
 import { db } from "../config/firebaseConfig";
-import { collection, addDoc, doc, getDocs } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc, setDoc, getDocs, query, where, updateDoc } from "firebase/firestore";
 
 export const createNewBucketActivity = async(activity) => {
   try {
-    // docRef - our reference to our newly created document
     const docRef = await addDoc(collection(db, "activities"), activity);
     console.log("Activity written with ID: ", docRef.id);
+    // Ensure the 'scores' subcollection is created when a new activity is added
+    await setDoc(doc(db, "activities", docRef.id, "scores", "totalScore"), { score: 0 });
     return true;
   } catch (e) {
     console.error("Error adding activity: ", e);
@@ -15,15 +16,10 @@ export const createNewBucketActivity = async(activity) => {
 
 export const getMyBucketList = async() => {
   let allActivities = [];
-
-  // Fetch all documents from the 'activities' collection
   const querySnapshot = await getDocs(collection(db, "activities"));
 
-  // Check if the querySnapshot is not empty
   if (!querySnapshot.empty) {
     querySnapshot.forEach((doc) => {
-      // console.log("Document data:", doc.data());
-      // Push each document's data into the allActivities array
       allActivities.push({
         activityName: doc.data().activityName,
         description: doc.data().description,
@@ -34,14 +30,43 @@ export const getMyBucketList = async() => {
         location: doc.data().location,
         userId: doc.data().userId,
         id: doc.id,
-        route: doc.data().route || []  // Include the route property, defaulting to an empty array if undefined
+        route: doc.data().route || []
       });
     });
   } else {
-    // Log if no documents are found in the 'activities' collection
-    console.log("No such document!");
+    console.log("No activities found in the database.");
   }
 
   return allActivities;
 }
+
+export const addOrUpdateScore = async (activityId, scoreToAdd) => {
+  const scoreDocRef = doc(db, "activities", activityId, "scores", "totalScore");
+  try {
+    const docSnap = await getDoc(scoreDocRef);
+    if (docSnap.exists()) {
+      const currentScore = docSnap.data().score;
+      await updateDoc(scoreDocRef, { score: currentScore + scoreToAdd });
+    } else {
+      await setDoc(scoreDocRef, { score: scoreToAdd });
+    }
+    console.log("Score updated successfully");
+    return true;
+  } catch (e) {
+    console.error("Error updating score: ", e);
+    return false;
+  }
+};
+
+export const getScore = async (activityId) => {
+  const scoreDocRef = doc(db, "activities", activityId, "scores", "totalScore");
+  try {
+    const docSnap = await getDoc(scoreDocRef);
+    return docSnap.exists() ? docSnap.data().score : 0;
+  } catch (e) {
+    console.error("Error fetching score: ", e);
+    return 0;
+  }
+};
+
 

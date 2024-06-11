@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
-import MapView, { Polyline } from 'react-native-maps'; // Import Polyline for drawing routes
+import { View, Text, StyleSheet, Image, ImageBackground, TouchableOpacity, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the thumbs up icon
+import MapView, { Polyline } from 'react-native-maps';
 import { useRoute, RouteProp } from '@react-navigation/native';
+import { addOrUpdateScore, getScore, getMyBucketList } from '../services/dbService';
 
-import { RootStackParamList } from '../app/index'; // Adjust the import path as necessary
-import { getMyBucketList } from '../services/dbService';
+import { RootStackParamList } from '../app/index';
 
 interface Activity {
   id: string;
@@ -24,12 +25,19 @@ interface Activity {
 
 type ActivityScreenRouteProp = RouteProp<RootStackParamList, 'ActivityScreen'>;
 
-const ActivityScreen = () => {
+interface ActivityScreenProps {
+  userId: string;
+}
+
+const ActivityScreen = ({ userId }: ActivityScreenProps) => {
   const route = useRoute<ActivityScreenRouteProp>();
   const { id } = route.params;
   const [activityData, setActivityData] = useState<Activity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userScore, setUserScore] = useState<number | null>(null);
+  const [liked, setLiked] = useState(false);
+  const scaleValue = new Animated.Value(1);
 
   useEffect(() => {
     const fetchActivityData = async () => {
@@ -40,16 +48,67 @@ const ActivityScreen = () => {
           setActivityData(activity);
         } else {
           setError('Activity not found');
+          console.error('Activity with ID ' + id + ' not found in the bucket list.');
         }
       } catch (e) {
         setError("Failed to fetch activity data");
-        console.error(e);
+        console.error("Error in fetchActivityData:", e);
       }
       setIsLoading(false);
     };
 
     fetchActivityData();
   }, [id]);
+
+  useEffect(() => {
+    const checkScore = async () => {
+      try {
+        if (activityData) {
+          const existingScore = await getScore(activityData.id);
+          setUserScore(existingScore);
+        }
+      } catch (e) {
+        console.error("Error in checkScore:", e);
+        setError("Failed to check score");
+      }
+    };
+
+    if (activityData) {
+      checkScore();
+    }
+  }, [activityData]);
+
+  const handleScore = async () => {
+    if (activityData) {
+      const newScore = userScore ? userScore + 1 : 1; // Increment score if already exists, otherwise start at 1
+      try {
+        const success = await addOrUpdateScore(activityData.id, newScore);
+        if (success) {
+          alert('Score updated successfully!');
+          setUserScore(newScore);
+          setLiked(true);
+          Animated.spring(scaleValue, {
+            toValue: 1.5,
+            friction: 2,
+            useNativeDriver: true,
+          }).start(() => {
+            Animated.spring(scaleValue, {
+              toValue: 1,
+              friction: 2,
+              useNativeDriver: true,
+            }).start();
+          });
+        } else {
+          alert('Failed to update score.');
+        }
+      } catch (e) {
+        alert('Failed to update score due to an error.');
+        console.error("Error in handleScore:", e);
+      }
+    } else {
+      alert('Activity data is not available. Please ensure the activity ID is correct and try again.');
+    }
+  };
 
   if (isLoading) {
     return <Text>Loading...</Text>;
@@ -60,30 +119,24 @@ const ActivityScreen = () => {
   }
 
   if (!activityData) {
-    return <Text>No activity data available.</Text>;
+    return <Text>No activity data available. Please check if the activity ID is correct or if the activity has been removed.</Text>;
   }
 
   return (
     <View style={styles.container}>
-      {/* Background image with user profile and activity details */}
       <ImageBackground 
         source={{ uri: activityData.profileCoverUrl }} 
         style={styles.profileContainer}
         resizeMode="cover"
       >
-        {/* User profile image */}
         <Image 
           source={{ uri: activityData.userImageUrl }} 
           style={styles.profileImage}
         />
-        {/* User name */}
         <Text style={styles.profileName}>{activityData.userName}</Text>
-        {/* User activity type */}
         <Text style={styles.userActivity}>{activityData.activityName}</Text>
       </ImageBackground>
-      {/* Map and activity information */}
       <View style={styles.mapContainer}>
-        {/* Map view showing location and user activity route */}
         <MapView
           style={styles.map}
           initialRegion={{
@@ -93,14 +146,12 @@ const ActivityScreen = () => {
             longitudeDelta: 0.0005,
           }}
         >
-          {/* Polyline to show the route taken in the activity */}
           <Polyline
             coordinates={activityData.route}
-            strokeColor="#FFCE1C" // red color for the route
+            strokeColor="#FFCE1C"
             strokeWidth={6}
           />
         </MapView>
-        {/* Combined activity details */}
         <View style={styles.mainInfo}>
           <Text style={styles.infoText}>Distance: {activityData.totalDistance} km</Text>
           <Text style={styles.infoText}>Duration: {activityData.time} min</Text>
@@ -110,7 +161,6 @@ const ActivityScreen = () => {
           <Text style={styles.infoText}>Type: {activityData.type}</Text>
         </View>
       </View>
-      {/* Description of the activity */}
       <View style={styles.descriptionContainer}>
         <View style={styles.headingContainer}>
           <Text style={styles.headingText}>Description</Text>
@@ -119,7 +169,13 @@ const ActivityScreen = () => {
           {activityData.description}
         </Text>
       </View>
-      
+      <Text style={styles.scoreDisplay}>Score: {userScore}</Text>
+      <TouchableOpacity onPress={handleScore} style={[styles.scoreButton, liked && styles.likedButton]}>
+        <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+          <Ionicons name="thumbs-up" size={24} color="white" />
+        </Animated.View>
+        <Text style={styles.scoreText}>Like</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -197,6 +253,27 @@ const styles = StyleSheet.create({
   descriptionText: {
     color: '#fff',
     fontSize: 16,
+  },
+  scoreDisplay: {
+    color: '#fff',
+    fontSize: 20,
+    marginVertical: 10,
+  },
+  scoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3C3E47',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  likedButton: {
+    backgroundColor: '#FFCE1C',
+  },
+  scoreText: {
+    marginLeft: 5,
+    color: '#fff',
+    fontSize: 18,
   },
 });
 

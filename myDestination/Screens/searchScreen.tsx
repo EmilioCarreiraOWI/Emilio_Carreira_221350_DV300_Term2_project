@@ -59,7 +59,12 @@ const SearchScreen = () => {
   }, []);
 
   // Filter users based on search query
-  const filteredUsers = users.filter(user => user.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredUsers = users.filter(user => {
+    if (user.name) {
+      return user.name.toLowerCase().includes(searchQuery.toLowerCase());
+    }
+    return false;
+  });
 
   const handleCardPress = (id: string) => {
     navigation.navigate('DetailedUser', { userId: id });

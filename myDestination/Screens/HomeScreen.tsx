@@ -51,8 +51,8 @@ const HomeScreen = () => {
     return <Text>Error: {error}</Text>;
   }
 
-  const handleCardPress = (id: string) => {
-    navigation.navigate('ActivityScreen', { id });
+  const handleCardPress = (card: CardData) => {
+    navigation.navigate('ActivityScreen', { userId: card.userId, id: card.id });
   };
 
   
@@ -68,7 +68,7 @@ const HomeScreen = () => {
 
       <View style={styles.cardsWrapper}>
         {cardData.map((card, index) => (
-          <TouchableOpacity key={card.id} style={styles.cardContainer} onPress={() => handleCardPress(card.id)}>
+          <TouchableOpacity key={card.id} style={styles.cardContainer} onPress={() => handleCardPress(card)}>
             <Text style={styles.cardTitle}>{card.activityName}</Text>
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{card.location}</Text>

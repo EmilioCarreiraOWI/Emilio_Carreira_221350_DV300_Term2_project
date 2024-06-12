@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { getMyBucketList } from '../services/dbService'; // Import getMyBucketList from dbService
+import { StackNavigationProp } from '@react-navigation/stack'; // Added import for StackNavigationProp
 
 interface RouteParams {
   userId: string;
@@ -28,14 +29,22 @@ interface Activity {
   totalDistance: number; // in kilometers
   averageSpeed: number; // in km/h
   time: number; // in minutes
+  score: number; // Added score property
 }
 
+type RootStackParamList = {
+  Home: undefined;
+  ActivityScreen: { id: string };
+  // other screens...
+};
+
 const DetailedUserScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   const userId = (route.params as RouteParams).userId; // Type assertion here
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [userActivities, setUserActivities] = useState<Activity[]>([]);
+  const [totalScore, setTotalScore] = useState<number>(0); // Define totalScore state
   const db = getFirestore();
   const auth = getAuth();
 
@@ -52,8 +61,10 @@ const DetailedUserScreen = () => {
     };
 
     const fetchActivities = async () => {
-      const activities = await getMyBucketList();
-      setUserActivities(activities.filter(activity => activity.userId === userId));
+      const activities = await getMyBucketList(userId); // Pass userId to the function
+      setUserActivities(activities.filter(activity => activity.userId === userId)); // Filter to only show the selected user's activities
+      const totalScore = activities.reduce((acc, activity) => acc + activity.score, 0); // Calculate totalScore
+      setTotalScore(totalScore);
     };
 
     fetchUserDetails();
@@ -71,11 +82,11 @@ const DetailedUserScreen = () => {
         <Text style={styles.profileName}>{userDetails.profileName}</Text>
         <Text style={styles.userActivity}>{userDetails.role}</Text>
       </ImageBackground>
-      <View style={styles.detailsSection}>
-        <Text style={styles.detailText}>Email: {userDetails.email}</Text>
-        <Text style={styles.detailText}>Location: {userDetails.location}</Text>
-        <Text style={styles.detailText}>Interests: {userDetails.interests ? userDetails.interests.join(', ') : 'No interests listed'}</Text>
+
+      <View style={styles.mainInfo}>
+        <Text style={styles.infoText}>Total Score: {totalScore}</Text>
       </View>
+
       <View style={styles.cardsWrapper}>
         {userActivities.map((activity, index) => (
           <TouchableOpacity key={activity.id} style={styles.cardContainer} onPress={() => navigation.navigate('ActivityScreen', { id: activity.id })}>
@@ -130,6 +141,23 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 10,
   },
+  mainInfo:{
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
+    borderColor: '#F3C94F',
+    padding: 15,
+    width: '100%',
+    backgroundColor: '#3C3E47',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  infoText: {
+    color: '#fff',
+    fontSize: 20,
+    marginVertical: 5,
+  },
   cardsWrapper: {
     alignItems: 'center',
   },
@@ -167,4 +195,3 @@ const styles = StyleSheet.create({
 });
 
 export default DetailedUserScreen;
-

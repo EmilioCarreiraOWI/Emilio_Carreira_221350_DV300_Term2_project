@@ -18,10 +18,14 @@ const SignUpScreen = () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       console.log('User created successfully');
-      navigation.navigate('SignInScreen');
     } catch (error) {
-      setError(error.message);
-      console.log('Error creating user:', error.message);
+      if (error instanceof Error) {
+        setError(error.message);
+        console.log('Error creating user:', error.message);
+      } else {
+        console.log('An unexpected error occurred:', error);
+        setError('An unexpected error occurred');
+      }
     }
   };
 

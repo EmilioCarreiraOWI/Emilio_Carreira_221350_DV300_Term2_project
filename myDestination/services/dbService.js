@@ -14,7 +14,7 @@ export const createNewBucketActivity = async(activity) => {
   }
 }
 
-export const getMyBucketList = async() => {
+export const getMyBucketList = async(userId) => {
   let allActivities = [];
   const querySnapshot = await getDocs(collection(db, "activities"));
 
@@ -69,4 +69,24 @@ export const getScore = async (activityId) => {
   }
 };
 
+export const getTotalScoreForUser = async (userId) => {
+  if (!userId) {
+    console.error("Invalid user ID provided:", userId);
+    return 0;
+  }
 
+  const activitiesRef = collection(db, "activities");
+  const q = query(activitiesRef, where("userId", "==", userId));
+  let totalScore = 0;
+
+  try {
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      totalScore += doc.data().score || 0; // Ensure each activity has a score, default to 0 if not present
+    });
+    return totalScore;
+  } catch (error) {
+    console.error("Error fetching total score for user:", error);
+    return 0;
+  }
+}

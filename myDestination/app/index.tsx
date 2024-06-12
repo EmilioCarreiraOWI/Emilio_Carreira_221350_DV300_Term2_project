@@ -20,9 +20,10 @@ import { useNavigation } from '@react-navigation/native';
 
 export type RootStackParamList = {
   Home: undefined;
-  ActivityScreen: { userId: string };
+  ActivityScreen: { userId: string; id: string; };
   Profile: { userId: string };
   DetailedUser: { userId: string };
+  SignInScreen: undefined;
 };
 
 interface ActivityScreenProps {

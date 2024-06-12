@@ -4,7 +4,7 @@ import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 import { handleLogin } from '../services/authService';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../path/to/navigationTypes'; // Adjust the path as necessary
+import { RootStackParamList } from '../app/index'; // Adjusted path
 
 // Define the navigation prop type
 type SignInScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SignInScreen'>;
@@ -29,10 +29,6 @@ const SignInScreen = () => {
   // Hook to access navigation functionality
   const navigation = useNavigation<SignInScreenNavigationProp>();
 
-  // Function to navigate to the registration screen
-  const navigateToRegister = () => {
-    navigation.navigate('SignUpScreen');
-  }
 
   // Main component render function
   return (

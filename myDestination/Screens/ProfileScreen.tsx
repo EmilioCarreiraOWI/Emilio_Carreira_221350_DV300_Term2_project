@@ -12,7 +12,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import ProfileCover from '../assets/images/profile-cover2.jpg';
 import User1 from '../assets/images/user1.jpg';
 import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the settings icon
-import { getMyBucketList, getScore } from '../services/dbService';
+import { getMyBucketList, getScore, getTotalScoreForUser } from '../services/dbService';
 
 const auth = getAuth();
 const db = getFirestore();
@@ -105,6 +105,17 @@ const ProfileScreen = () => {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const fetchTotalScore = async () => {
+      if (currentUser && currentUser.uid) {
+        const totalScore = await getTotalScoreForUser(currentUser.uid);
+        setTotalScore(totalScore);
+      }
+    };
+
+    fetchTotalScore();
+  }, [currentUser]);
+
   const saveProfileChanges = async () => {
     if (currentUser) {
       try {
@@ -118,6 +129,7 @@ const ProfileScreen = () => {
         const success = await saveOrUpdateUserProfile(currentUser.uid, userProfile);
         if (success.success) {
           console.log('Profile updated successfully');
+          console.log('Updated Profile:', userProfile);
           setCurrentUser({...currentUser, ...userProfile});
         } else {
           console.error('Failed to update profile', success.message);
@@ -131,7 +143,7 @@ const ProfileScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <ImageBackground 
-        source={ProfileCover}
+        source={{ uri: currentUser?.profileImage || ProfileCover }}
         style={styles.profileContainer}
         resizeMode="cover"
       >
@@ -174,8 +186,26 @@ const ProfileScreen = () => {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
+
             <TouchableOpacity style={styles.closeModal} onPress={() => setModalVisible(false)}>
               <Ionicons name="close-circle" size={30} color="#FFF" />
+            </TouchableOpacity>
+
+            <TextInput
+              style={styles.input}
+              onChangeText={setProfileName}
+              value={profileName}
+              placeholder="Enter Profile Name"
+            />
+            <TextInput
+              style={styles.input}
+              onChangeText={setUserRole}
+              value={userRole}
+              placeholder="Enter Role"
+            />
+
+            <TouchableOpacity style={styles.saveButton} onPress={saveProfileChanges}>
+              <Text style={styles.saveButtonText}>Save Changes</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.signOutSection} onPress={() => {
               signOut(auth).then(() => {
@@ -341,7 +371,35 @@ const styles = StyleSheet.create({
   closeModalText: {
     fontSize: 24,
     color: '#fff',
-  }
+  },
+  saveButton: {
+    width: '90%',
+    height: 60,
+    backgroundColor: '#108DF9',
+    borderRadius: 25,
+    textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: 'white',
+    marginBottom: 10,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  saveButtonText: {
+    fontSize: 16,
+    color: '#fff',
+  },
+  input: {
+    width: '90%',
+    height: 60,
+    marginBottom: 10,
+    borderRadius: 25,
+    borderColor: '#108DF9',
+    borderWidth: 3,
+    padding: 10,
+    backgroundColor: '#3C3E47',
+    color: '#ffffff',
+  },
 });
 
 export default ProfileScreen;

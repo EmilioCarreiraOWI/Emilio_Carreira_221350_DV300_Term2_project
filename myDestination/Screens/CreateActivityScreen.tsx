@@ -273,28 +273,30 @@ const CreateActivityScreen = () => {
               onChangeText={setDescription}
               multiline
             />
-            <Picker
-              selectedValue={difficulty}
-              style={styles.picker}
-              onValueChange={(itemValue: string, itemIndex: number) => setDifficulty(itemValue)}
-            >
-              <Picker.Item label="Easy" value="easy" />
-              <Picker.Item label="Moderate" value="moderate" />
-              <Picker.Item label="Challenging" value="challenging" />
-              <Picker.Item label="Difficult" value="difficult" />
-              <Picker.Item label="Extreme" value="extreme" />
-            </Picker>
-            <Picker
-              selectedValue={type}
-              style={styles.picker}
-              onValueChange={(itemValue: string, itemIndex: number) => setType(itemValue)}
-            >
-              <Picker.Item label="Running" value="running" />
-              <Picker.Item label="Cycling" value="cycling" />
-              <Picker.Item label="Hiking" value="hiking" />
-              <Picker.Item label="Swimming" value="swimming" />
-              <Picker.Item label="Gym Workout" value="gym" />
-            </Picker>
+          
+              <Picker
+                selectedValue={difficulty}
+                style={styles.inputPicker}
+                onValueChange={(itemValue: string, itemIndex: number) => setDifficulty(itemValue)}
+              >
+                <Picker.Item label="Easy" value="easy" />
+                <Picker.Item label="Moderate" value="moderate" />
+                <Picker.Item label="Challenging" value="challenging" />
+                <Picker.Item label="Difficult" value="difficult" />
+                <Picker.Item label="Extreme" value="extreme" />
+              </Picker>
+              <Picker
+                selectedValue={type}
+                style={styles.inputPicker}
+                onValueChange={(itemValue: string, itemIndex: number) => setType(itemValue)}
+              >
+                <Picker.Item label="Running" value="running" />
+                <Picker.Item label="Cycling" value="cycling" />
+                <Picker.Item label="Hiking" value="hiking" />
+                <Picker.Item label="Swimming" value="swimming" />
+                <Picker.Item label="Gym Workout" value="gym" />
+              </Picker>
+            
             <View style={styles.buttonContainer}>
                 <TouchableOpacity
                     style={styles.buttonSeconday}
@@ -337,7 +339,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-
   input: {
     width: '100%',
     height: 'auto',
@@ -349,14 +350,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#3C3E47',
     color: '#fff',
   },
-  picker: {
+  inputPicker: {
     width: '100%',
-    height: 50,
+    height: 120,
+    justifyContent: 'center',
     marginBottom: 10,
     borderRadius: 25,
     borderColor: '#108DF9',
     borderWidth: 3,
-    padding: 15,
+    backgroundColor: '#3C3E47',
+    color: '#fff',
+  },
+  picker: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    borderColor: '#108DF9',
+    borderWidth: 3,
     backgroundColor: '#3C3E47',
     color: '#fff',
   },

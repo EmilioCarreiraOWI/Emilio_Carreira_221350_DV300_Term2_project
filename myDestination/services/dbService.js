@@ -90,3 +90,31 @@ export const getTotalScoreForUser = async (userId) => {
     return 0;
   }
 }
+
+export const getActivityById = async (activityId) => {
+  const activityRef = doc(db, "activities", activityId);
+  try {
+    const docSnap = await getDoc(activityRef);
+    if (docSnap.exists()) {
+      return {
+        activityName: docSnap.data().activityName,
+        description: docSnap.data().description,
+        averageSpeed: docSnap.data().averageSpeed,
+        startTime: docSnap.data().startTime,
+        endTime: docSnap.data().endTime,
+        totalDistance: docSnap.data().totalDistance,
+        location: docSnap.data().location,
+        userId: docSnap.data().userId,
+        id: docSnap.id,
+        route: docSnap.data().route || [],
+        time: docSnap.data().time // Assuming 'time' is stored directly in the activity document
+      };
+    } else {
+      console.log("No activity found with ID:", activityId);
+      return null;
+    }
+  } catch (e) {
+    console.error("Error fetching activity by ID:", e);
+    return null;
+  }
+};

@@ -87,6 +87,8 @@ const DetailedUserScreen = () => {
         <Text style={styles.infoText}>Total Score: {totalScore}</Text>
       </View>
 
+      <Text style={styles.title}>All the Activities</Text>
+
       <View style={styles.cardsWrapper}>
         {userActivities.map((activity, index) => (
           <TouchableOpacity key={activity.id} style={styles.cardContainer} onPress={() => navigation.navigate('ActivityScreen', { id: activity.id })}>
@@ -152,11 +154,19 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-around',
+    marginBottom: 10
   },
   infoText: {
     color: '#fff',
     fontSize: 20,
     marginVertical: 5,
+  },
+  title: {
+    fontSize: 20,
+    color: '#fff',
+    marginBottom: 10,
+    width: '90%',
+    marginLeft: '6%'
   },
   cardsWrapper: {
     alignItems: 'center',

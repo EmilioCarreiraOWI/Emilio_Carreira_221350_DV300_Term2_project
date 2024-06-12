@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the thumbs up icon
 import MapView, { Polyline } from 'react-native-maps';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { addOrUpdateScore, getScore, getMyBucketList } from '../services/dbService';
+import { addOrUpdateScore, getScore, getMyBucketList, getActivityById } from '../services/dbService';
+import { fetchAllUsers } from '../services/usersService'; // Import fetchAllUsers to get user profile image
 
 import { RootStackParamList } from '../app/index';
 
@@ -37,7 +38,16 @@ const ActivityScreen = ({ userId }: ActivityScreenProps) => {
   const [error, setError] = useState<string | null>(null);
   const [userScore, setUserScore] = useState<number | null>(null);
   const [liked, setLiked] = useState(false);
+  const [userProfileImage, setUserProfileImage] = useState<string | null>(null);
+  const [userProfileName, setUserProfileName] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const scaleValue = new Animated.Value(1);
+
+  const calculateWorkoutTime = () => {
+    if (!activityData || !activityData.time) return 0;
+    // Assuming `activityData.time` holds the duration in minutes
+    return activityData.time;
+  };
 
   useEffect(() => {
     const fetchActivityData = async () => {
@@ -46,6 +56,13 @@ const ActivityScreen = ({ userId }: ActivityScreenProps) => {
         const activity = activities.find((act: Activity) => act.id === id);
         if (activity) {
           setActivityData(activity);
+          const users = await fetchAllUsers();
+          const user = users.find(user => user.id === activity.userId);
+          if (user) {
+            setUserProfileImage(user.profileImage);
+            setUserProfileName(user.profileName);
+            setUserRole(user.role);
+          }
         } else {
           setError('Activity not found');
           console.error('Activity with ID ' + id + ' not found in the bucket list.');
@@ -123,75 +140,74 @@ const ActivityScreen = ({ userId }: ActivityScreenProps) => {
   }
 
   return (
-    <View style={styles.container}>
-      <ImageBackground 
-        source={{ uri: activityData.profileCoverUrl }} 
-        style={styles.profileContainer}
-        resizeMode="cover"
-      >
-        <Image 
-          source={{ uri: activityData.userImageUrl }} 
-          style={styles.profileImage}
-        />
-        <Text style={styles.profileName}>{activityData.userName}</Text>
-        <Text style={styles.userActivity}>{activityData.activityName}</Text>
-      </ImageBackground>
-      <View style={styles.mapContainer}>
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude: activityData.route[0].latitude,
-            longitude: activityData.route[0].longitude,
-            latitudeDelta: 0.0005,
-            longitudeDelta: 0.0005,
-          }}
+    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
+        <ImageBackground 
+          source={{ uri: userProfileImage || activityData.profileCoverUrl }} 
+          style={styles.profileContainer}
+          resizeMode="cover"
         >
-          <Polyline
-            coordinates={activityData.route}
-            strokeColor="#FFCE1C"
-            strokeWidth={6}
+          <Image 
+            source={{ uri: userProfileImage || activityData.userImageUrl }} 
+            style={styles.profileImage}
           />
-        </MapView>
+          
+          <Text style={styles.profileName}>{userProfileName || activityData.userName}</Text>
+          <Text style={styles.userRole}>{userRole}</Text>
+        </ImageBackground>
+
         <View style={styles.mainInfo}>
-          <Text style={styles.infoText}>Distance: {activityData.totalDistance} km</Text>
-          <Text style={styles.infoText}>Duration: {activityData.time} min</Text>
-          <Text style={styles.infoText}>Difficulty: {activityData.difficulty}</Text>
-          <Text style={styles.infoText}>Location: {activityData.location}</Text>
-          <Text style={styles.infoText}>Date: {activityData.date}</Text>
-          <Text style={styles.infoText}>Type: {activityData.type}</Text>
+            <Text style={styles.userActivity}>{activityData.activityName}</Text>
         </View>
-      </View>
-      <View style={styles.descriptionContainer}>
-        <View style={styles.headingContainer}>
-          <Text style={styles.headingText}>Description</Text>
-        </View>
-        <Text style={styles.descriptionText}>
-          {activityData.description}
-        </Text>
-      </View>
-      <Text style={styles.scoreDisplay}>Score: {userScore}</Text>
-      <TouchableOpacity onPress={handleScore} style={[styles.scoreButton, liked && styles.likedButton]}>
-        <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
-          <Ionicons name="thumbs-up" size={24} color="white" />
-        </Animated.View>
-        <Text style={styles.scoreText}>Like</Text>
-      </TouchableOpacity>
-    </View>
+
+        {/* <View style={styles.mapContainer}> */}
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: activityData.route[0].latitude,
+              longitude: activityData.route[0].longitude,
+              latitudeDelta: 0.0005,
+              longitudeDelta: 0.0005,
+            }}
+          >
+            <Polyline
+              coordinates={activityData.route}
+              strokeColor="#FFCE1C"
+              strokeWidth={6}
+            />
+          </MapView>
+        {/* </View> */}
+        <View style={styles.mainInfo}>
+            <Text style={styles.infoText}>{activityData.location}</Text>
+            <Text style={styles.infoText}>{activityData.totalDistance} km</Text>
+            <Text style={styles.infoText}>{calculateWorkoutTime()} min</Text>
+            <TouchableOpacity onPress={handleScore} style={[styles.scoreButton, liked && styles.likedButton]}>
+              <Animated.View style={{ transform: [{ scale: scaleValue }] }}>
+                <Ionicons name="thumbs-up" size={24} color="white" />
+              </Animated.View>
+              <Text style={styles.scoreText}>{userScore} Like </Text>
+            </TouchableOpacity>
+          </View>
+        {/* <View style={styles.descriptionContainer}>
+          <View style={styles.headingContainer}>
+            <Text style={styles.headingText}>Description</Text>
+          </View>
+          <Text style={styles.descriptionText}>
+            {activityData.description}
+          </Text>
+        </View> */}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#24252A',
   },
   profileContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    padding: 20,
     borderBottomWidth: 3,
     borderColor: '#F3C94F'
   },
@@ -201,16 +217,23 @@ const styles = StyleSheet.create({
     borderColor: '#F3C94F',
     borderWidth: 2,
     borderRadius: 50,
+    marginTop: '5%',
   },
   profileName: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#fff',
   },
-  userActivity: {
+  userRole: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
+    marginBottom: '5%'
+  },
+  userActivity: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#108DF9',
   },
   mapContainer: {
     flex: 5,
@@ -218,7 +241,7 @@ const styles = StyleSheet.create({
   },
   map: {
     width: '100%',
-    height: '40%',
+    height: '35%',
   },
   mainInfo:{
     borderTopWidth: 3,
@@ -239,7 +262,6 @@ const styles = StyleSheet.create({
   },
   headingContainer: {
     width: '100%',
-    marginTop: 0,
   },
   headingText: {
     fontSize: 24,
@@ -249,6 +271,7 @@ const styles = StyleSheet.create({
   descriptionContainer: {
     width: '90%',
     padding: 20,
+    marginTop: 10
   },
   descriptionText: {
     color: '#fff',
@@ -260,12 +283,17 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   scoreButton: {
-    flexDirection: 'row',
+    width: '90%',
+    height: 60,
+    backgroundColor: '#108DF9',
+    borderRadius: 25,
+    textAlign: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#3C3E47',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
+    color: 'white',
+    marginBottom: 10,
+    marginLeft: 'auto',
+    marginRight: 'auto',
   },
   likedButton: {
     backgroundColor: '#FFCE1C',

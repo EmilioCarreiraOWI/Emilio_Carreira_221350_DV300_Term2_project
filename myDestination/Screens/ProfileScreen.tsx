@@ -6,13 +6,12 @@ import { signOut, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { saveOrUpdateUserProfile, fetchAllUsers } from '../services/usersService';
 import { fetchUserWithActivities } from '../services/fetchUserWithActivities';
 import '../config/firebaseConfig';
-import { doc, updateDoc, getFirestore } from 'firebase/firestore';
-import { launchImageLibrary } from 'react-native-image-picker';
-
+import { getFirestore } from 'firebase/firestore';
 import ProfileCover from '../assets/images/profile-cover2.jpg';
-import User1 from '../assets/images/user1.jpg';
+import User1 from '../assets/images/user1.jpg'; // Imported User1 as a local image
 import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the settings icon
-import { getMyBucketList, getScore, getTotalScoreForUser } from '../services/dbService';
+import { getScore, getTotalScoreForUser } from '../services/dbService';
+import { Platform } from 'react-native';
 
 const auth = getAuth();
 const db = getFirestore();
@@ -116,6 +115,10 @@ const ProfileScreen = () => {
     fetchTotalScore();
   }, [currentUser]);
 
+  useEffect(() => {
+    console.log("Current User Image URI:", currentUser?.profileImage);
+  }, [currentUser]);
+
   const saveProfileChanges = async () => {
     if (currentUser) {
       try {
@@ -148,7 +151,7 @@ const ProfileScreen = () => {
         resizeMode="cover"
       >
         <Image 
-          source={{ uri: currentUser?.profileImage || User1 }} 
+          source={typeof currentUser?.profileImage === 'string' ? { uri: currentUser.profileImage } : User1}
           style={styles.profileImage}
         />
         <Text style={styles.profileName}>{currentUser ? currentUser.profileName || 'Finish your profile' : 'Finish your profile'}</Text>

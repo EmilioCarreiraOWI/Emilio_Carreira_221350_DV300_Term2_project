@@ -4,14 +4,14 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { signOut, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { saveOrUpdateUserProfile, fetchAllUsers } from '../services/usersService';
-import { fetchUserWithActivities } from '../services/fetchUserWithActivities';
+import { fetchUserWithActivities } from '../services/fetchUserWithActivities'; // Using fetchUserWithActivities
+import { fetchAllActivitiesScores } from '../services/LeaderBoardService';
 import '../config/firebaseConfig';
 import { getFirestore } from 'firebase/firestore';
 import ProfileCover from '../assets/images/profile-cover2.jpg';
-import User1 from '../assets/images/user1.jpg'; // Imported User1 as a local image
-import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the settings icon
-import { getScore, getTotalScoreForUser } from '../services/dbService';
-import { Platform } from 'react-native';
+import User1 from '../assets/images/user1.jpg';
+import { Ionicons } from '@expo/vector-icons';
+
 
 const auth = getAuth();
 const db = getFirestore();
@@ -19,7 +19,7 @@ const db = getFirestore();
 type RootStackParamList = {
   SignInScreen: undefined;
   ProfileEditedScreen: undefined;
-  ActivityScreen: { id: string }; // Added this line
+  ActivityScreen: { id: string };
 };
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -33,8 +33,7 @@ interface Activity {
   route: { latitude: number; longitude: number }[];
   totalDistance: number;
   averageSpeed: number;
-  time: number;
-  score: number; // Added score field
+  scores: number[] | undefined; // Updated scores property to be optional
 }
 
 interface ExtendedUser {
@@ -45,6 +44,12 @@ interface ExtendedUser {
   email: string | null;
   activities?: Activity[];
 }
+
+const getTotalScoreForUser = async (userId: string): Promise<number> => {
+  const activities = await fetchAllActivitiesScores();
+  const userActivities = activities.filter(activity => activity.userId === userId);
+  return userActivities.reduce((acc, activity) => acc + (activity.scores ? activity.scores.reduce((scoreSum, score) => scoreSum + score, 0) : 0), 0);
+};
 
 const ProfileScreen = () => {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
@@ -60,23 +65,20 @@ const ProfileScreen = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const currentUserDetails = await fetchUserWithActivities(user.uid) as ExtendedUser;
-        if (currentUserDetails) {
-          setCurrentUser(currentUserDetails);
-          setProfileName(currentUserDetails.profileName || '');
-          setProfileImage(currentUserDetails.profileImage || User1);
-          setUserRole(currentUserDetails.role || 'Explorer');
-          setUserActivities(currentUserDetails.activities || []);
-          const score = currentUserDetails.activities?.reduce((acc, activity) => acc + activity.score, 0) || 0;
-          setTotalScore(score);
-        } else {
-          setCurrentUser(null);
-        }
+        const userProfile = await fetchUserWithActivities(user.uid);
+        setCurrentUser(userProfile);
+        setUserActivities(userProfile.activities || []);
+        const totalScore = await getTotalScoreForUser(user.uid);
+        setTotalScore(totalScore);
       } else {
         setCurrentUser(null);
       }
     });
 
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     const fetchUsers = async () => {
       const users = await fetchAllUsers();
       const usersWithActivities = await Promise.all(users.map(async user => ({
@@ -92,32 +94,14 @@ const ProfileScreen = () => {
           route: activity.route || [],
           totalDistance: activity.totalDistance || 0,
           averageSpeed: activity.averageSpeed || 0,
-          time: activity.time || 0,
-          score: await getScore(activity.id) || 0 // Ensure score is resolved here
+          scores: activity.scores || [] // Ensured scores are fetched correctly
         })))
       })));
       setAllUsers(usersWithActivities);
     };
 
     fetchUsers();
-
-    return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    const fetchTotalScore = async () => {
-      if (currentUser && currentUser.uid) {
-        const totalScore = await getTotalScoreForUser(currentUser.uid);
-        setTotalScore(totalScore);
-      }
-    };
-
-    fetchTotalScore();
-  }, [currentUser]);
-
-  useEffect(() => {
-    console.log("Current User Image URI:", currentUser?.profileImage);
-  }, [currentUser]);
 
   const saveProfileChanges = async () => {
     if (currentUser) {
@@ -134,6 +118,7 @@ const ProfileScreen = () => {
           console.log('Profile updated successfully');
           console.log('Updated Profile:', userProfile);
           setCurrentUser({...currentUser, ...userProfile});
+          setModalVisible(false);
         } else {
           console.error('Failed to update profile', success.message);
         }
@@ -169,7 +154,7 @@ const ProfileScreen = () => {
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{activity.location}</Text>
               <Text style={styles.cardStats}>{activity.totalDistance} km</Text>
-              <Text style={styles.cardStats}>{activity.score} pts</Text>
+              <Text style={styles.cardStats}>{activity.scores ? activity.scores.join(', ') : '0'} pts</Text>
             </View>
           </TouchableOpacity>
         ))}

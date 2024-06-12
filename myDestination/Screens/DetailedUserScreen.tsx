@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, ImageBackground, TouchableOp
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
-import { getMyBucketList } from '../services/dbService'; // Import getMyBucketList from dbService
+import { fetchAllActivitiesScores } from '../services/LeaderBoardService'; // Import fetchAllActivitiesScores from LeaderBoardService
 import { StackNavigationProp } from '@react-navigation/stack'; // Added import for StackNavigationProp
 
 interface RouteParams {
@@ -29,7 +29,7 @@ interface Activity {
   totalDistance: number; // in kilometers
   averageSpeed: number; // in km/h
   time: number; // in minutes
-  score: number; // Added score property
+  scores: number[]; // Array of scores
 }
 
 type RootStackParamList = {
@@ -61,9 +61,15 @@ const DetailedUserScreen = () => {
     };
 
     const fetchActivities = async () => {
-      const activities = await getMyBucketList(userId); // Pass userId to the function
-      setUserActivities(activities.filter(activity => activity.userId === userId)); // Filter to only show the selected user's activities
-      const totalScore = activities.reduce((acc, activity) => acc + activity.score, 0); // Calculate totalScore
+      const activities = await fetchAllActivitiesScores(); // Fetch scores from LeaderBoardService
+      const userActivities = activities
+        .filter(activity => activity.userId === userId)
+        .map(activity => ({
+          ...activity,
+          time: (new Date(activity.endTime).getTime() - new Date(activity.startTime).getTime()) / 60000 // Calculate time in minutes
+        }));
+      setUserActivities(userActivities);
+      const totalScore = userActivities.reduce((acc, activity) => acc + activity.scores.reduce((scoreSum, score) => scoreSum + score, 0), 0);
       setTotalScore(totalScore);
     };
 
@@ -96,7 +102,7 @@ const DetailedUserScreen = () => {
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{activity.location}</Text>
               <Text style={styles.cardStats}>{activity.totalDistance} km</Text>
-              <Text style={styles.cardStats}>{activity.time} min</Text>
+              <Text style={styles.cardStats}>{activity.scores.join(', ')} pts</Text>
             </View>
           </TouchableOpacity>
         ))}

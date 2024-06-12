@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Image, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
-import { getMyBucketList } from '../services/dbService';
+import { fetchAllActivitiesScores } from '../services/LeaderBoardService';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../app/index';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { onSnapshot, collection } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 
 interface CardData {
   activityName: string;
@@ -16,7 +18,7 @@ interface CardData {
   route: { latitude: number; longitude: number }[];
   totalDistance: number; // in kilometers
   averageSpeed: number; // in km/h
-  time: number; // in minutes
+  scores?: number[]; // Array of scores, optional to handle cases where scores might not be available
 }
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -30,7 +32,7 @@ const HomeScreen = () => {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const activities = await getMyBucketList();
+        const activities = await fetchAllActivitiesScores();
         setCardData(activities);
         setError(null);
       } catch (e) {
@@ -41,6 +43,16 @@ const HomeScreen = () => {
     };
 
     fetchActivities();
+
+    const unsubscribe = onSnapshot(collection(db, "activities"), (snapshot) => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added") {
+          fetchActivities();
+        }
+      });
+    });
+
+    return () => unsubscribe();
   }, []);
 
   if (isLoading) {
@@ -54,8 +66,6 @@ const HomeScreen = () => {
   const handleCardPress = (card: CardData) => {
     navigation.navigate('ActivityScreen', { userId: card.userId, id: card.id });
   };
-
-  
 
   return (
     <ScrollView style={styles.container}>
@@ -73,7 +83,7 @@ const HomeScreen = () => {
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{card.location}</Text>
               <Text style={styles.cardStats}>{card.totalDistance} km</Text>
-              <Text style={styles.cardStats}>{card.time} min</Text>
+              <Text style={styles.cardStats}>{(card.scores ? card.scores.join(', ') : '0')} pts</Text>
             </View>
             
             {card.route && card.route.length > 0 ? (

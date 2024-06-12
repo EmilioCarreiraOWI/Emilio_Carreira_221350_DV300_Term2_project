@@ -15,6 +15,7 @@ import ProfileScreen from "@/Screens/ProfileScreen";
 import ActivityScreen from "@/Screens/ActivityScreen";
 import CreateActivityScreen from "@/Screens/CreateActivityScreen";
 import DetailedUserScreen from "@/Screens/DetailedUserScreen";
+import RewardScreen from "@/Screens/RewardScreen"; // Import RewardScreen
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 
@@ -193,6 +194,9 @@ export default function Index() {
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
               break;
+            case 'RewardScreen': // Add RewardScreen icon
+              iconName = focused ? 'trophy' : 'trophy-outline';
+              break;
             default:
               iconName = 'alert-circle-outline'; // Default icon
           }
@@ -207,6 +211,7 @@ export default function Index() {
       <Tab.Screen name="HomeStack" component={HomeStack} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="SearchUserStack" component={SearchUserStack} options={{ tabBarLabel: 'Search' }} />
       <Tab.Screen name="CreateActivityScreen" component={CreateActivityScreen} options={{ tabBarLabel: 'Create Activity' }} />
+      <Tab.Screen name="RewardScreen" component={RewardScreen} options={{ tabBarLabel: 'Rewards' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
@@ -217,5 +222,5 @@ function SomeComponent() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   // Component logic here
-  navigation.navigate('ActivityScreen', { userId: 'someUserId' });
+  navigation.navigate('ActivityScreen', { userId: 'someUserId', id: 'someId' });
 }

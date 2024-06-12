@@ -5,6 +5,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../constants/Colors';
 import { fetchAllUsers } from '../services/usersService';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
+import { onSnapshot, collection } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 
 // Define the User interface
 interface User {
@@ -40,22 +42,23 @@ const SearchScreen = () => {
   const [users, setUsers] = useState<User[]>([]);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  // Define fetchUsers function outside of useEffect
-  const fetchUsers = async () => {
-    const fetchedUsers = await fetchAllUsers();
-    const usersFormatted = fetchedUsers.map((user: any) => ({
-      id: user.id,
-      name: user.profileName,
-      image: user.profileImage,
-      activity: user.role,
-      activities: user.activities
-    }));
-    setUsers(usersFormatted);
-  };
-
-  // Fetch all users from Firestore on component mount
+  // Fetch all users from Firestore on component mount and subscribe to changes
   useEffect(() => {
-    fetchUsers();
+    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      const fetchedUsers: User[] = []; // Explicitly type the array as User[]
+      snapshot.forEach(doc => {
+        fetchedUsers.push({
+          id: doc.id,
+          name: doc.data().profileName,
+          image: doc.data().profileImage,
+          activity: doc.data().role,
+          activities: doc.data().activities
+        });
+      });
+      setUsers(fetchedUsers);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Filter users based on search query

@@ -20,10 +20,14 @@ import { useNavigation } from '@react-navigation/native';
 
 export type RootStackParamList = {
   Home: undefined;
-  ActivityScreen: { id: string };
+  ActivityScreen: { userId: string };
   Profile: { userId: string };
   DetailedUser: { userId: string };
 };
+
+interface ActivityScreenProps {
+  userId: string;
+}
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
@@ -48,6 +52,7 @@ function HomeStack() {
         <Stack.Screen 
           name="ActivityScreen" 
           component={ActivityScreen}
+          initialParams={{ userId: '' }}
         />
       </Stack.Navigator>
   );
@@ -94,6 +99,7 @@ function UserActivityStackScreen() {
       <UserActivityStack.Screen
         name="ActivityScreen"
         component={ActivityScreen}
+        initialParams={{ userId: '' }}
       />
     </UserActivityStack.Navigator>
   );
@@ -210,4 +216,5 @@ function SomeComponent() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   // Component logic here
+  navigation.navigate('ActivityScreen', { userId: 'someUserId' });
 }

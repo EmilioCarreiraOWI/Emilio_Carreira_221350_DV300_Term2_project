@@ -11,7 +11,8 @@ import { launchImageLibrary } from 'react-native-image-picker';
 
 import ProfileCover from '../assets/images/profile-cover2.jpg';
 import User1 from '../assets/images/user1.jpg';
-import { getMyBucketList } from '../services/dbService';
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the settings icon
+import { getMyBucketList, getScore } from '../services/dbService';
 
 const auth = getAuth();
 const db = getFirestore();
@@ -19,6 +20,7 @@ const db = getFirestore();
 type RootStackParamList = {
   SignInScreen: undefined;
   ProfileEditedScreen: undefined;
+  ActivityScreen: { id: string }; // Added this line
 };
 
 type ProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -33,6 +35,7 @@ interface Activity {
   totalDistance: number;
   averageSpeed: number;
   time: number;
+  score: number; // Added score field
 }
 
 interface ExtendedUser {
@@ -53,17 +56,20 @@ const ProfileScreen = () => {
   const [userRole, setUserRole] = useState('');
   const [userActivities, setUserActivities] = useState<Activity[]>([]);
   const [allUsers, setAllUsers] = useState<ExtendedUser[]>([]);
+  const [totalScore, setTotalScore] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const currentUserDetails = await fetchUserWithActivities(user.uid) as ExtendedUser;
-        if (currentUserDetails) {  // Check if currentUserDetails is truthy
+        if (currentUserDetails) {
           setCurrentUser(currentUserDetails);
-          setProfileName(currentUserDetails.profileName || ''); // Fallback to empty string if undefined
-          setProfileImage(currentUserDetails.profileImage || User1); // Fallback to default image if undefined
+          setProfileName(currentUserDetails.profileName || '');
+          setProfileImage(currentUserDetails.profileImage || User1);
           setUserRole(currentUserDetails.role || 'Explorer');
           setUserActivities(currentUserDetails.activities || []);
+          const score = currentUserDetails.activities?.reduce((acc, activity) => acc + activity.score, 0) || 0;
+          setTotalScore(score);
         } else {
           setCurrentUser(null);
         }
@@ -74,11 +80,11 @@ const ProfileScreen = () => {
 
     const fetchUsers = async () => {
       const users = await fetchAllUsers();
-      setAllUsers(users.map(user => ({
+      const usersWithActivities = await Promise.all(users.map(async user => ({
         ...user,
         uid: user.id,
         email: user.email || null,
-        activities: user.activities.map(activity => ({
+        activities: await Promise.all(user.activities.map(async activity => ({
           id: activity.id,
           activityName: activity.activityName || 'Unknown',
           description: activity.description || 'No description',
@@ -87,9 +93,11 @@ const ProfileScreen = () => {
           route: activity.route || [],
           totalDistance: activity.totalDistance || 0,
           averageSpeed: activity.averageSpeed || 0,
-          time: activity.time || 0
-        }))
+          time: activity.time || 0,
+          score: await getScore(activity.id) || 0 // Ensure score is resolved here
+        })))
       })));
+      setAllUsers(usersWithActivities);
     };
 
     fetchUsers();
@@ -121,9 +129,9 @@ const ProfileScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ alignItems: 'center', justifyContent: 'center' }}>
+    <ScrollView style={styles.container}>
       <ImageBackground 
-        source={{ uri: currentUser?.profileImage || User1 }} 
+        source={ProfileCover}
         style={styles.profileContainer}
         resizeMode="cover"
       >
@@ -135,6 +143,10 @@ const ProfileScreen = () => {
         <Text style={styles.userRole}>{currentUser ? currentUser.role || 'edit profile' : 'edit profile'}</Text>
       </ImageBackground>
 
+      <View style={styles.mainInfo}>
+        <Text style={styles.infoText}>Total Score: {totalScore}</Text>
+      </View>
+
       <View style={styles.cardsWrapper}>
         {userActivities.map((activity, index) => (
           <TouchableOpacity key={activity.id} style={styles.cardContainer} onPress={() => navigation.navigate('ActivityScreen', { id: activity.id })}>
@@ -142,16 +154,16 @@ const ProfileScreen = () => {
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{activity.location}</Text>
               <Text style={styles.cardStats}>{activity.totalDistance} km</Text>
-              <Text style={styles.cardStats}>{activity.time} min</Text>
+              <Text style={styles.cardStats}>{activity.score} pts</Text>
             </View>
           </TouchableOpacity>
         ))}
       </View>
 
       <TouchableOpacity style={styles.EditSection} onPress={() => setModalVisible(true)}>
-        <Text style={styles.editProfileText}>Edit Profile</Text>
+        <Ionicons name="settings" size={30} color="#FFF" />
       </TouchableOpacity>
-      
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -162,55 +174,22 @@ const ProfileScreen = () => {
       >
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalHeading}>Edit Profile</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your name"
-              placeholderTextColor="#ccc"
-              value={profileName}
-              onChangeText={setProfileName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter image URL"
-              placeholderTextColor="#ccc"
-              value={profileImage}
-              onChangeText={setProfileImage}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your role"
-              placeholderTextColor="#ccc"
-              value={userRole}
-              onChangeText={setUserRole}
-            />
-
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.buttonSeconday} onPress={() => setModalVisible(!modalVisible)}>
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.buttonPrimary} onPress={saveProfileChanges}>
-                <Text style={styles.buttonText}>Save</Text>
-              </TouchableOpacity>
-            
-            </View>
+            <TouchableOpacity style={styles.closeModal} onPress={() => setModalVisible(false)}>
+              <Ionicons name="close-circle" size={30} color="#FFF" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.signOutSection} onPress={() => {
+              signOut(auth).then(() => {
+                navigation.navigate('SignInScreen');
+                console.log(currentUser?.email + ' has been signed out.');
+              }).catch((error) => {
+                console.error('Sign out error', error);
+              });
+            }}>
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      <View style={styles.signOutSection}>
-        <TouchableOpacity onPress={() => {
-          signOut(auth).then(() => {
-            navigation.navigate('SignInScreen');
-            console.log(currentUser?.email + ' has been signed out.');
-          }).catch((error) => {
-            console.error('Sign out error', error);
-          });
-        }}>
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
-      </View>
     </ScrollView>
   );
 };
@@ -246,6 +225,23 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  mainInfo:{
+    borderTopWidth: 3,
+    borderBottomWidth: 3,
+    borderColor: '#F3C94F',
+    padding: 15,
+    width: '100%',
+    backgroundColor: '#3C3E47',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  infoText: {
+    color: '#fff',
+    fontSize: 20,
+    marginVertical: 5,
   },
   cardsWrapper: {
     alignItems: 'center',
@@ -308,7 +304,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     color: 'white',
-    marginVertical: 10
+    marginBottom: 10,
+    marginTop: 10,
+    marginLeft: 'auto',
+    marginRight: 'auto',
   },
   signOutText: {
     fontSize: 16,
@@ -336,54 +335,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5
   },
-  modalHeading: {
-    marginBottom: 15,
-    color: '#FFCE1C',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 24
+  closeModal: {
+    alignSelf: 'flex-end',
   },
-  input: {
-    width: '100%',
-    height: 60,
-    marginBottom: 10,
-    borderRadius: 25,
-    borderColor: '#108DF9',
-    borderWidth: 3,
-    padding: 10,
-    backgroundColor: '#3C3E47',
+  closeModalText: {
+    fontSize: 24,
     color: '#fff',
-  },
-  buttonContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  buttonPrimary: {
-    width: '46%',
-    height: 60,
-    backgroundColor: '#108DF9',
-    borderRadius: 25,
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: 'white',
-  },
-  buttonSeconday: {
-    width: '46%',
-    height: 60,
-    borderWidth: 3,
-    borderColor: '#108DF9',
-    borderRadius: 25,
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: 'white',
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
   }
 });
 

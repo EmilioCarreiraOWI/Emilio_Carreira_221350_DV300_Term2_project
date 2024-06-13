@@ -111,10 +111,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#24252A',
   },
   title: {
-    fontSize: 24,
-    color: '#FFFFFF',
+    color: '#FFCE1C',
     textAlign: 'center',
-    marginVertical: 20,
+    fontWeight: 'bold',
+    fontSize: 24,
+    marginTop: 50,
+    marginBottom: 30
   },
   sectionTitle: {
     fontSize: 20,

@@ -72,7 +72,7 @@ function SearchUserStack() {
       initialRouteName="Back"
     >
       <SearchStack.Screen
-        name="SearchUsers"
+        name="Back"
         component={SearchScreen}
       />
       <SearchStack.Screen

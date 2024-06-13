@@ -157,6 +157,9 @@ const ActivityScreen = ({ userId }: ActivityScreenProps) => {
 
         <View style={styles.mainInfo}>
             <Text style={styles.userActivity}>{activityData.activityName}</Text>
+            <Text style={styles.descriptionText}>
+              {activityData.description}
+            </Text>
         </View>
 
         {/* <View style={styles.mapContainer}> */}
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
   },
   map: {
     width: '100%',
-    height: '35%',
+    height: '32%',
   },
   mainInfo:{
     borderTopWidth: 3,
@@ -276,6 +279,7 @@ const styles = StyleSheet.create({
   descriptionText: {
     color: '#fff',
     fontSize: 16,
+    marginTop: 15
   },
   scoreDisplay: {
     color: '#fff',

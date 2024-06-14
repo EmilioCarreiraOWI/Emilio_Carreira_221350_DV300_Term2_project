@@ -19,6 +19,7 @@ import RewardScreen from "@/Screens/RewardScreen"; // Import RewardScreen
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 
+// Define the types for navigation parameters
 export type RootStackParamList = {
   Home: undefined;
   ActivityScreen: { userId: string; id: string; };
@@ -27,15 +28,18 @@ export type RootStackParamList = {
   SignInScreen: undefined;
 };
 
+// Define props for ActivityScreen
 interface ActivityScreenProps {
   userId: string;
 }
 
+// Create navigators
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator<RootStackParamList>();
 const SearchStack = createStackNavigator();
 const UserActivityStack = createStackNavigator();
 
+// Stack navigator for Home
 function HomeStack() {
   return (
       <Stack.Navigator
@@ -60,6 +64,7 @@ function HomeStack() {
   );
 }
 
+// Stack navigator for searching users
 function SearchUserStack() {
   return (
     <SearchStack.Navigator
@@ -83,6 +88,7 @@ function SearchUserStack() {
   );
 }
 
+// Stack navigator for user activities
 function UserActivityStackScreen() {
   return (
     <UserActivityStack.Navigator
@@ -107,6 +113,7 @@ function UserActivityStackScreen() {
   );
 }
 
+// Logo component used in the header
 function LogoTitle() {
   return (
     <Image
@@ -116,11 +123,13 @@ function LogoTitle() {
   );
 }
 
+// Main component
 export default function Index() {
   const [showSplash, setShowSplash] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const auth = getAuth();
 
+  // Handle splash screen timing
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
@@ -128,6 +137,7 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Monitor authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -141,10 +151,12 @@ export default function Index() {
     return unsubscribe;
   }, []);
 
+  // Display splash screen if applicable
   if (showSplash) {
     return <SplashScreen />;
   }
 
+  // Display authentication screens if not logged in
   if (!loggedIn) {
     return (
       <Tab.Navigator
@@ -175,7 +187,7 @@ export default function Index() {
     );
   }
 
-  // If logged in, directly navigate to the Home screen within the Tab Navigator
+  // Main app navigation if logged in
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

@@ -1,38 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
-import { fetchAllActivitiesScores } from '../services/LeaderBoardService';
-import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../app/index';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { onSnapshot, collection } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
+import { getMyBucketList } from '../services/dbService'; // Import getMyBucketList from dbService
+import { RootStackParamList } from '@/app';
 
+// Define the structure for card data
 interface CardData {
   activityName: string;
   description: string;
   id: string;
   userId: string;
   location: string;
+  type: string;
   route: { latitude: number; longitude: number }[];
-  totalDistance: number; // in kilometers
-  averageSpeed: number; // in km/h
-  scores?: number[]; // Array of scores, optional to handle cases where scores might not be available
+  totalDistance: number;
+  averageSpeed: number;
 }
 
+// Define navigation type for HomeScreen
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
 const HomeScreen = () => {
   const [cardData, setCardData] = useState<CardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
+  // Fetch activities on component mount
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const activities = await fetchAllActivitiesScores();
+        const activities = await getMyBucketList();
         setCardData(activities);
         setError(null);
       } catch (e) {
@@ -44,6 +47,7 @@ const HomeScreen = () => {
 
     fetchActivities();
 
+    // Real-time updates for activities
     const unsubscribe = onSnapshot(collection(db, "activities"), (snapshot) => {
       snapshot.docChanges().forEach(change => {
         if (change.type === "added") {
@@ -55,18 +59,33 @@ const HomeScreen = () => {
     return () => unsubscribe();
   }, []);
 
+  // Filter card data based on search query
+  const filteredCardData = cardData.filter(card => {
+    return card.activityName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           card.userId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           card.type?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  // Display loader while data is loading
   if (isLoading) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#108DF9" />
+      </View>
+    );
   }
 
+  // Display error message if error occurs
   if (error) {
     return <Text>Error: {error}</Text>;
   }
 
+  // Handle card press to navigate to ActivityScreen
   const handleCardPress = (card: CardData) => {
     navigation.navigate('ActivityScreen', { userId: card.userId, id: card.id });
   };
 
+  // Main component render
   return (
     <ScrollView style={styles.container}>
       <View style={styles.introContainer}>
@@ -75,15 +94,20 @@ const HomeScreen = () => {
           Welcome to MyDestination, your ultimate travel companion app. Discover and explore the exciting adventures around the world!
         </Text>
       </View>
-
+      <TextInput
+          style={styles.searchBar}
+          placeholder="Search activities..."
+          placeholderTextColor="#fff"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
       <View style={styles.cardsWrapper}>
-        {cardData.map((card, index) => (
+        {filteredCardData.map((card, index) => (
           <TouchableOpacity key={card.id} style={styles.cardContainer} onPress={() => handleCardPress(card)}>
             <Text style={styles.cardTitle}>{card.activityName}</Text>
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{card.location}</Text>
-              <Text style={styles.cardStats}>{card.totalDistance} km</Text>
-              <Text style={styles.cardStats}>{(card.scores ? card.scores.join(', ') : '0')} pts</Text>
+              <Text style={styles.cardStats}>{card.type}</Text> 
             </View>
             
             {card.route && card.route.length > 0 ? (
@@ -116,10 +140,30 @@ const HomeScreen = () => {
   );
 };
 
+// Styles for the HomeScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#24252A',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#24252A',
+  },
+  searchBar: {
+    height: 50,
+    width: '90%',
+    paddingHorizontal: 10,
+    backgroundColor: '#3C3E47',
+    borderColor: '#108DF9',
+    borderWidth: 1,
+    borderRadius: 20,
+    fontSize: 16,
+    color: '#fff',
+    marginHorizontal: 'auto',
+    marginBottom: 20,
   },
   introContainer: {
     alignItems: 'center',
@@ -195,8 +239,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     resizeMode: 'cover',
-    
-    
   },
 });
 

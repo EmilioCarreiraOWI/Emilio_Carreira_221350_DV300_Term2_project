@@ -1,8 +1,10 @@
 import { db } from "../config/firebaseConfig";
 import { collection, addDoc, doc, getDoc, setDoc, getDocs, query, where, updateDoc } from "firebase/firestore";
 
+// Function to create a new bucket activity in the database
 export const createNewBucketActivity = async(activity) => {
   try {
+    // Add a new document in the 'activities' collection
     const docRef = await addDoc(collection(db, "activities"), activity);
     console.log("Activity written with ID: ", docRef.id);
     // Ensure the 'scores' subcollection is created when a new activity is added
@@ -14,6 +16,7 @@ export const createNewBucketActivity = async(activity) => {
   }
 }
 
+// Function to retrieve all activities associated with a user
 export const getMyBucketList = async(userId) => {
   let allActivities = [];
   const querySnapshot = await getDocs(collection(db, "activities"));
@@ -30,7 +33,8 @@ export const getMyBucketList = async(userId) => {
         location: doc.data().location,
         userId: doc.data().userId,
         id: doc.id,
-        route: doc.data().route || []
+        route: doc.data().route || [],
+        type: doc.data().type,
       });
     });
   } else {
@@ -40,6 +44,7 @@ export const getMyBucketList = async(userId) => {
   return allActivities;
 }
 
+// Function to add or update the score of an activity
 export const addOrUpdateScore = async (activityId, scoreToAdd) => {
   const scoreDocRef = doc(db, "activities", activityId, "scores", "totalScore");
   try {
@@ -58,6 +63,7 @@ export const addOrUpdateScore = async (activityId, scoreToAdd) => {
   }
 };
 
+// Function to retrieve the score of a specific activity
 export const getScore = async (activityId) => {
   const scoreDocRef = doc(db, "activities", activityId, "scores", "totalScore");
   try {
@@ -69,6 +75,7 @@ export const getScore = async (activityId) => {
   }
 };
 
+// Function to calculate the total score for a specific user
 export const getTotalScoreForUser = async (userId) => {
   if (!userId) {
     console.error("Invalid user ID provided:", userId);
@@ -91,6 +98,7 @@ export const getTotalScoreForUser = async (userId) => {
   }
 }
 
+// Function to retrieve details of an activity by its ID
 export const getActivityById = async (activityId) => {
   const activityRef = doc(db, "activities", activityId);
   try {
@@ -107,7 +115,8 @@ export const getActivityById = async (activityId) => {
         userId: docSnap.data().userId,
         id: docSnap.id,
         route: docSnap.data().route || [],
-        time: docSnap.data().time // Assuming 'time' is stored directly in the activity document
+        time: docSnap.data().time,
+        type: docSnap.data().type
       };
     } else {
       console.log("No activity found with ID:", activityId);

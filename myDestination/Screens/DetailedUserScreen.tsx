@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ImageBackground, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, ImageBackground, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
-import { fetchAllActivitiesScores } from '../services/LeaderBoardService'; // Import fetchAllActivitiesScores from LeaderBoardService
-import { StackNavigationProp } from '@react-navigation/stack'; // Added import for StackNavigationProp
+import { fetchAllActivitiesScores } from '../services/LeaderBoardService';
+import { StackNavigationProp } from '@react-navigation/stack';
 
+// Define interfaces for route parameters and user details
 interface RouteParams {
   userId: string;
 }
@@ -14,11 +15,12 @@ interface UserDetails {
   profileImage: string;
   profileName: string;
   role: string;
-  email: string | null | undefined; // Allow undefined as well
+  email: string | null | undefined;
   location: string;
-  interests: string[] | null; // Allow interests to be null
+  interests: string[] | null;
 }
 
+// Define interface for activity details
 interface Activity {
   activityName: string;
   description: string;
@@ -26,28 +28,30 @@ interface Activity {
   userId: string;
   location: string;
   route: { latitude: number; longitude: number }[];
-  totalDistance: number; // in kilometers
-  averageSpeed: number; // in km/h
-  time: number; // in minutes
-  scores: number[]; // Array of scores
+  totalDistance: number;
+  averageSpeed: number;
+  time: number;
+  scores: number[];
 }
 
+// Define navigation parameters
 type RootStackParamList = {
   Home: undefined;
   ActivityScreen: { id: string };
-  // other screens...
 };
 
 const DetailedUserScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  const userId = (route.params as RouteParams).userId; // Type assertion here
+  const userId = (route.params as RouteParams).userId;
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [userActivities, setUserActivities] = useState<Activity[]>([]);
-  const [totalScore, setTotalScore] = useState<number>(0); // Define totalScore state
+  const [totalScore, setTotalScore] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
   const db = getFirestore();
   const auth = getAuth();
 
+  // Fetch user details and activities
   useEffect(() => {
     const fetchUserDetails = async () => {
       const docRef = doc(db, "users", userId);
@@ -61,22 +65,37 @@ const DetailedUserScreen = () => {
     };
 
     const fetchActivities = async () => {
-      const activities = await fetchAllActivitiesScores(); // Fetch scores from LeaderBoardService
+      const activities = await fetchAllActivitiesScores();
       const userActivities = activities
         .filter(activity => activity.userId === userId)
         .map(activity => ({
           ...activity,
-          time: (new Date(activity.endTime).getTime() - new Date(activity.startTime).getTime()) / 60000 // Calculate time in minutes
+          time: (new Date(activity.endTime).getTime() - new Date(activity.startTime).getTime()) / 60000
         }));
       setUserActivities(userActivities);
       const totalScore = userActivities.reduce((acc, activity) => acc + activity.scores.reduce((scoreSum, score) => scoreSum + score, 0), 0);
       setTotalScore(totalScore);
     };
 
-    fetchUserDetails();
-    fetchActivities();
+    const fetchData = async () => {
+      await fetchUserDetails();
+      await fetchActivities();
+      setLoading(false);
+    };
+
+    fetchData();
   }, [userId]);
 
+  // Display loading indicator
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#108DF9" />
+      </View>
+    );
+  }
+
+  // Display user details
   if (!userDetails) {
     return <Text>Loading...</Text>;
   }
@@ -111,9 +130,16 @@ const DetailedUserScreen = () => {
   );
 };
 
+// Define styles for the screen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#24252A',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#24252A',
   },
   profileContainer: {
@@ -140,14 +166,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  detailsSection: {
-    padding: 20,
-  },
-  detailText: {
-    fontSize: 18,
-    color: '#fff',
-    marginBottom: 10,
   },
   mainInfo:{
     borderTopWidth: 3,

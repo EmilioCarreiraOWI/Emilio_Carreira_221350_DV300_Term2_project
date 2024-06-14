@@ -3,21 +3,21 @@ import { auth } from "../config/firebaseConfig";
 import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import { db } from "../config/firebaseConfig";
 
+// Function to handle user login using email and password
 export const handleLogin = async (email, password) => {
     try {
+        // Attempt to sign in with provided credentials
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        // Signed in 
         const user = userCredential.user;
-        console.log("Logged in user: " + user.email);
-        // Update or create user document
+        console.log("Logged in user: ", user.email);
+        // Update or create user document in the database
         await updateUserInformation(user.uid, { email: user.email });
     } catch (error) {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.log(errorMessage);
+        console.error("Login error: ", error.message);
     }
 }
 
+// Function to fetch all users from the database
 export const fetchAllUsers = async () => {
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
@@ -38,24 +38,25 @@ export const fetchAllUsers = async () => {
     }
 }
 
+// Function to update or create a user's information in the database
 export const updateUserInformation = async (userId, userInfo) => {
     try {
         const userRef = doc(db, "users", userId);
         const userDoc = await getDocs(userRef);
         if (!userDoc.exists()) {
-            // If the user document does not exist, create it
+            // Create a new user document if it does not exist
             await setDoc(userRef, userInfo);
             console.log("User document created for: ", userId);
         } else {
-            // If the user document exists, update it
+            // Update existing user document
             await setDoc(userRef, userInfo, { merge: true });
             console.log("User information updated for: ", userId);
         }
-        // Optionally, return some status or data indicating success
+        // Return success status
         return { success: true, userId: userId, updatedFields: userInfo };
     } catch (error) {
         console.error("Error updating user information: ", error);
-        // Optionally, return error status or message
+        // Return error status
         return { success: false, error: error };
     }
 }

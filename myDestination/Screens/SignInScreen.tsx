@@ -6,11 +6,10 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../app/index'; // Adjusted path
 
-// Define the navigation prop type
+// Define the navigation prop type for SignInScreen
 type SignInScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SignInScreen'>;
 
 const SignInScreen = () => {
-
   // State hooks for managing form inputs and error message
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +28,6 @@ const SignInScreen = () => {
   // Hook to access navigation functionality
   const navigation = useNavigation<SignInScreenNavigationProp>();
 
-
   // Main component render function
   return (
     <View style={styles.container}>
@@ -39,7 +37,7 @@ const SignInScreen = () => {
         style={styles.input}
         placeholder="Your Email"
         placeholderTextColor="#ffffff"
-        onChangeText={newText => setEmail(newText)}
+        onChangeText={setEmail}
         defaultValue={email}
         keyboardType="email-address"
         autoCapitalize="none"
@@ -50,13 +48,13 @@ const SignInScreen = () => {
         placeholder="Your Password"
         placeholderTextColor="#ffffff"
         value={password}
-        onChangeText={newText => setPassword(newText)}
+        onChangeText={setPassword}
         secureTextEntry
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.buttonPrimary} onPress={handleSignIn}>
-            <Text style={styles.buttonText}>Login</Text>
+          <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>
     </View>

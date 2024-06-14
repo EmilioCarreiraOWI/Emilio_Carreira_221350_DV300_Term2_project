@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ImageBackground, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { signOut, getAuth, onAuthStateChanged } from 'firebase/auth';
 import { saveOrUpdateUserProfile, fetchAllUsers } from '../services/usersService';
-import { fetchUserWithActivities } from '../services/fetchUserWithActivities'; // Using fetchUserWithActivities
+import { fetchUserWithActivities } from '../services/fetchUserWithActivities';
 import { fetchAllActivitiesScores } from '../services/LeaderBoardService';
 import '../config/firebaseConfig';
 import { getFirestore } from 'firebase/firestore';
@@ -12,10 +12,11 @@ import ProfileCover from '../assets/images/profile-cover2.jpg';
 import User1 from '../assets/images/user1.jpg';
 import { Ionicons } from '@expo/vector-icons';
 
-
+// Firebase authentication and Firestore database initialization
 const auth = getAuth();
 const db = getFirestore();
 
+// Type definitions for navigation and user activities
 type RootStackParamList = {
   SignInScreen: undefined;
   ProfileEditedScreen: undefined;
@@ -33,7 +34,8 @@ interface Activity {
   route: { latitude: number; longitude: number }[];
   totalDistance: number;
   averageSpeed: number;
-  scores: number[] | undefined; // Updated scores property to be optional
+  scores: number[] | undefined; // Ensure this property is included
+  time?: any; // Include this if 'time' is also used elsewhere in your code
 }
 
 interface ExtendedUser {
@@ -45,6 +47,7 @@ interface ExtendedUser {
   activities?: Activity[];
 }
 
+// Function to calculate total score for a user based on their activities
 const getTotalScoreForUser = async (userId: string): Promise<number> => {
   const activities = await fetchAllActivitiesScores();
   const userActivities = activities.filter(activity => activity.userId === userId);
@@ -61,25 +64,32 @@ const ProfileScreen = () => {
   const [userActivities, setUserActivities] = useState<Activity[]>([]);
   const [allUsers, setAllUsers] = useState<ExtendedUser[]>([]);
   const [totalScore, setTotalScore] = useState(0);
+  const [loading, setLoading] = useState(true);
 
+  // Effect to handle user authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        setLoading(true);
         const userProfile = await fetchUserWithActivities(user.uid);
         setCurrentUser(userProfile);
         setUserActivities(userProfile.activities || []);
         const totalScore = await getTotalScoreForUser(user.uid);
         setTotalScore(totalScore);
+        setLoading(false);
       } else {
         setCurrentUser(null);
+        setLoading(false);
       }
     });
 
     return unsubscribe;
   }, []);
 
+  // Effect to fetch all users and their activities
   useEffect(() => {
     const fetchUsers = async () => {
+      setLoading(true);
       const users = await fetchAllUsers();
       const usersWithActivities = await Promise.all(users.map(async user => ({
         ...user,
@@ -94,15 +104,26 @@ const ProfileScreen = () => {
           route: activity.route || [],
           totalDistance: activity.totalDistance || 0,
           averageSpeed: activity.averageSpeed || 0,
-          scores: activity.scores || [] // Ensured scores are fetched correctly
+          scores: activity.scores || [] // Directly use scores from the activity
         })))
       })));
       setAllUsers(usersWithActivities);
+      setLoading(false);
     };
 
     fetchUsers();
   }, []);
 
+  // Loader view when data is being fetched
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#108DF9" />
+      </View>
+    );
+  }
+
+  // Function to handle profile updates
   const saveProfileChanges = async () => {
     if (currentUser) {
       try {
@@ -128,6 +149,7 @@ const ProfileScreen = () => {
     }
   };
 
+  // Main profile screen layout
   return (
     <ScrollView style={styles.container}>
       <ImageBackground 
@@ -154,7 +176,7 @@ const ProfileScreen = () => {
             <View style={styles.cardStatsContainer}>
               <Text style={styles.cardStats}>{activity.location}</Text>
               <Text style={styles.cardStats}>{activity.totalDistance} km</Text>
-              <Text style={styles.cardStats}>{activity.scores ? activity.scores.join(', ') : '0'} pts</Text>
+              <Text style={styles.cardStats}>{activity.scores ? activity.scores.reduce((a, b) => a + b, 0) : '0'} pts</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -212,6 +234,7 @@ const ProfileScreen = () => {
   );
 };
 
+// Styles for the Profile Screen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -387,6 +410,12 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#3C3E47',
     color: '#ffffff',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#24252A',
   },
 });
 

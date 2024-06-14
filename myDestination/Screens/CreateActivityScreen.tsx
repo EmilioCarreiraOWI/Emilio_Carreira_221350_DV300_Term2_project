@@ -23,14 +23,15 @@ const CreateActivityScreen = () => {
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [type, setType] = useState('');
-  const [route, setRoute] = useState<RouteCoordinate[]>([]); // Use the defined type for the route state
-  const [currentPosition, setCurrentPosition] = useState({ latitude: 0, longitude: 0 }); // Store current position with initial values
-  const [subscription, setSubscription] = useState<LocationSubscription | null>(null); // To manage the location subscription
-  const [modalVisible, setModalVisible] = useState(false); // State to control modal visibility
-  const [isRecording, setIsRecording] = useState(false); // State to track recording status
-  const [startTime, setStartTime] = useState<Date | null>(null); // State to store start time of recording
-  const mapRef = useRef<MapView>(null); // Reference to the MapView
+  const [route, setRoute] = useState<RouteCoordinate[]>([]);
+  const [currentPosition, setCurrentPosition] = useState({ latitude: 0, longitude: 0 });
+  const [subscription, setSubscription] = useState<LocationSubscription | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const mapRef = useRef<MapView>(null);
 
+  // Effect to get the current location on component mount
   useEffect(() => {
     const getCurrentLocation = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -75,7 +76,7 @@ const CreateActivityScreen = () => {
 
     setSubscription(LocationSubscription);
     setIsRecording(true);
-    setStartTime(new Date()); // Set the start time when recording starts
+    setStartTime(new Date());
   };
 
   // Function to stop recording the route and show modal
@@ -83,7 +84,7 @@ const CreateActivityScreen = () => {
     if (subscription) {
       subscription.remove();
       setSubscription(null);
-      setModalVisible(true); // Show modal on stop
+      setModalVisible(true);
       setIsRecording(false);
     }
   };
@@ -95,14 +96,14 @@ const CreateActivityScreen = () => {
       setSubscription(null);
     }
     setIsRecording(false);
-    setRoute([]); // Clear the recorded route
-    setModalVisible(false); // Hide modal
-    setActivityName(''); // Reset activity name
-    setLocation(''); // Reset location
-    setDescription(''); // Reset description
-    setDifficulty(''); // Reset difficulty
-    setType(''); // Reset type
-    setStartTime(null); // Reset start time
+    setRoute([]);
+    setModalVisible(false);
+    setActivityName('');
+    setLocation('');
+    setDescription('');
+    setDifficulty('');
+    setType('');
+    setStartTime(null);
   };
 
   // Function to resume recording the route
@@ -116,7 +117,7 @@ const CreateActivityScreen = () => {
     if (startTime) {
       const endTime = new Date();
       const duration = endTime.getTime() - startTime.getTime();
-      return Math.floor(duration / 60000); // Convert milliseconds to minutes
+      return Math.floor(duration / 60000);
     }
     return 0;
   };
@@ -156,7 +157,7 @@ const CreateActivityScreen = () => {
     }
 
     const activityData = {
-      userId: user.uid, // Include the user's ID
+      userId: user.uid,
       activityName,
       location,
       description,
@@ -170,7 +171,7 @@ const CreateActivityScreen = () => {
     };
 
     try {
-      const success = await createNewBucketActivity(activityData); // Save to Firestore
+      const success = await createNewBucketActivity(activityData);
       if (success) {
         console.log('Activity saved successfully');
       } else {
@@ -205,6 +206,9 @@ const CreateActivityScreen = () => {
           longitudeDelta: 0.0421,
         }}
         showsUserLocation={true}
+        followsUserLocation={true}
+        zoomEnabled={true}
+        zoomControlEnabled={true}
       >
         {route.length > 0 && (
           <Polyline
@@ -290,11 +294,12 @@ const CreateActivityScreen = () => {
                 style={styles.inputPicker}
                 onValueChange={(itemValue: string, itemIndex: number) => setType(itemValue)}
               >
-                <Picker.Item label="Running" value="running" />
-                <Picker.Item label="Cycling" value="cycling" />
-                <Picker.Item label="Hiking" value="hiking" />
-                <Picker.Item label="Swimming" value="swimming" />
-                <Picker.Item label="Gym Workout" value="gym" />
+                <Picker.Item label="Running" value="Running" />
+                <Picker.Item label="Cycling" value="Cycling" />
+                <Picker.Item label="Hiking" value="Hiking" />
+                <Picker.Item label="Swimming" value="Swimming" />
+                <Picker.Item label="Walking" value="Walking" />
+                <Picker.Item label="Car Riding" value="Car Riding" />
               </Picker>
             
             <View style={styles.buttonContainer}>

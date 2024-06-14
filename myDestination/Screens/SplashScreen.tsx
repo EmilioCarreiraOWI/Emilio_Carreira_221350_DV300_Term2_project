@@ -1,43 +1,42 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
 import myDestinationLogo from '../assets/images/myDestinationLogo.png';
-import { Animated } from 'react-native';
 
-// SplashScreen component definition
+// SplashScreen component that displays an animated logo
 const SplashScreen = () => {
-  // Initialize animation state for logo scaling
+  // State to manage the scale of the logo
   const logoScale = new Animated.Value(1);
 
-  // Define looping animation for logo scaling
+  // Animation configuration for logo scaling
   Animated.loop(
     Animated.sequence([
       Animated.timing(logoScale, {
-        toValue: 1.1, // Scale up to 110%
-        duration: 1000, // Duration of 1000 milliseconds
-        useNativeDriver: true, // Use native driver for better performance
+        toValue: 1.1, // Increase scale to 110%
+        duration: 1000, // Animation duration of 1 second
+        useNativeDriver: true, // Optimize animation performance
       }),
       Animated.timing(logoScale, {
-        toValue: 1, // Scale back to 100%
-        duration: 1000, // Duration of 1000 milliseconds
-        useNativeDriver: true, // Use native driver for better performance
+        toValue: 1, // Reset scale to 100%
+        duration: 1000, // Animation duration of 1 second
+        useNativeDriver: true, // Optimize animation performance
       }),
     ])
-  ).start(); // Start the animation
+  ).start(); // Initiate the animation loop
 
-  // Render the SplashScreen UI
+  // Component layout
   return (
     <View style={styles.container}>
-      <View style={styles.SplashContainer}>
+      <View style={styles.splashContainer}>
         <Animated.Image 
           source={myDestinationLogo} 
-          style={{ transform: [{ scale: logoScale }] }} // Apply animated scale transformation
+          style={{ transform: [{ scale: logoScale }] }} // Apply dynamic scaling
         />
       </View>
     </View>
   );
 };
 
-// StyleSheet for layout and styling
+// Styles for the SplashScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -47,7 +46,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  SplashContainer: {
+  splashContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, StyleSheet, FlatList, Text, Image, TouchableOpacity } from 'react-native';
+import { View, TextInput, StyleSheet, FlatList, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../constants/Colors';
@@ -8,44 +8,44 @@ import myDestinationLogo from '../assets/images/myDestinationLogo.png';
 import { onSnapshot, collection } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 
-// Define the User interface
+// User interface definition
 interface User {
   id: string;
   name: string;
-  image: string; // Updated type to string for image URLs
+  image: string;
   activity: string;
   activities: Array<{ id: string; [key: string]: any }>;
 }
 
-// Define colors associated with different activities
+// Mapping of activities to their respective colors
 const activityColors: { [key: string]: string } = {
-  'Mountain Hiking': '#FF6347', // Tomato
-  'Scuba Diving': '#4682B4', // SteelBlue
-  'Safari Adventure': '#DEB887', // BurlyWood
-  'Skydiving': '#00BFFF', // DeepSkyBlue
-  'City Tours': '#FFD700', // Gold
-  'Snowboarding': '#00CED1', // DarkTurquoise
-  'Desert Safari': '#DAA520', // GoldenRod
-  'Deep Sea Fishing': '#20B2AA', // LightSeaGreen
-  'Cycling': '#228B22', // ForestGreen
-  'Rock Climbing': '#A0522D' // Sienna
+  'Mountain Hiking': '#FF6347',
+  'Scuba Diving': '#4682B4',
+  'Safari Adventure': '#DEB887',
+  'Skydiving': '#00BFFF',
+  'City Tours': '#FFD700',
+  'Snowboarding': '#00CED1',
+  'Desert Safari': '#DAA520',
+  'Deep Sea Fishing': '#20B2AA',
+  'Cycling': '#228B22',
+  'Rock Climbing': '#A0522D'
 };
 
-// Define the navigation stack parameters
+// Navigation stack parameters
 type RootStackParamList = {
   DetailedUser: { userId: string };
-  // Add other screens and their parameters here
 };
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  // Fetch all users from Firestore on component mount and subscribe to changes
+  // Fetch and subscribe to user data from Firestore
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
-      const fetchedUsers: User[] = []; // Explicitly type the array as User[]
+      const fetchedUsers: User[] = [];
       snapshot.forEach(doc => {
         fetchedUsers.push({
           id: doc.id,
@@ -56,24 +56,21 @@ const SearchScreen = () => {
         });
       });
       setUsers(fetchedUsers);
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // Filter users based on search query
-  const filteredUsers = users.filter(user => {
-    if (user.name) {
-      return user.name.toLowerCase().includes(searchQuery.toLowerCase());
-    }
-    return false;
-  });
+  // Filter users by search query
+  const filteredUsers = users.filter(user => user.name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
+  // Handle navigation to user details
   const handleCardPress = (id: string) => {
     navigation.navigate('DetailedUser', { userId: id });
   };
 
-  // Render each user as a card
+  // Render user card
   const renderItem = ({ item }: { item: User }) => (
     <TouchableOpacity 
       style={styles.card}
@@ -86,6 +83,14 @@ const SearchScreen = () => {
   );
 
   // Main component render
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#108DF9" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -111,6 +116,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#24252A',
     padding: 10,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#24252A',
   },
   searchBar: {
     height: 50,

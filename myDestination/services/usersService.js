@@ -1,14 +1,16 @@
 import { db } from "../config/firebaseConfig";
-import { collection, getDocs, query, where, doc, setDoc, addDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, setDoc } from "firebase/firestore";
 
 export const fetchAllUsers = async () => {
     try {
         const usersCollectionRef = collection(db, "users");
         const querySnapshot = await getDocs(usersCollectionRef);
+
         const usersList = await Promise.all(querySnapshot.docs.map(async doc => {
             const userActivitiesRef = collection(db, "activities");
             const activitiesQuery = query(userActivitiesRef, where("userId", "==", doc.id));
             const activitiesSnapshot = await getDocs(activitiesQuery);
+
             const activities = activitiesSnapshot.docs.map(activityDoc => ({
                 id: activityDoc.id,
                 activityName: activityDoc.data().activityName || 'Unknown',
@@ -20,6 +22,7 @@ export const fetchAllUsers = async () => {
                 averageSpeed: activityDoc.data().averageSpeed || 0,
                 time: activityDoc.data().time || 0
             }));
+
             return {
                 id: doc.id,
                 email: doc.data().email || null,
@@ -29,6 +32,7 @@ export const fetchAllUsers = async () => {
                 activities: activities
             };
         }));
+
         console.log("Fetched all users with profile details and activities: ", usersList);
         return usersList;
     } catch (error) {
@@ -51,6 +55,7 @@ export const saveOrUpdateUserProfile = async (userId, userProfile) => {
             email: userProfile.email,
             role: userProfile.role
         };
+
         await setDoc(userRef, updatedProfile, { merge: true });
         console.log("User profile updated: ", userId);
         return { success: true, message: "Profile updated successfully" };

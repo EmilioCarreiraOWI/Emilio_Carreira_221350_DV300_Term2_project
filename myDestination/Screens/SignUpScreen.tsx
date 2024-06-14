@@ -81,10 +81,6 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 20,
-    display: 'flex',
-    justifyContent: 'center',
-    alignContent: 'center',
-    flexShrink: 0,
     color: '#FFCE1C',
   },
   input: {
@@ -103,21 +99,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   buttonContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     width: '90%',
+    alignItems: 'center',
   },
   buttonPrimary: {
     width: '100%',
     height: 60,
     backgroundColor: '#108DF9',
     borderRadius: 25,
-    textAlign: 'center',
     justifyContent: 'center',
     alignItems: 'center',
-    color: 'white',
   },
   buttonText: {
     color: '#fff'

@@ -63,7 +63,8 @@ const HomeScreen = () => {
   const filteredCardData = cardData.filter(card => {
     return card.activityName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
            card.userId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           card.type?.toLowerCase().includes(searchQuery.toLowerCase());
+           card.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           card.location?.toLowerCase().includes(searchQuery.toLowerCase()); // Added location to the search filter
   });
 
   // Display loader while data is loading

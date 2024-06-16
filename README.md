@@ -59,19 +59,10 @@ In the project directory, you can run:
 - `npm start` - Starts the development server.
 - `npm run build` - Bundles the app for production.
 
-## Contributing
-
-Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) first.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
 ## Contact
 
 If you have any questions or suggestions, feel free to reach out:
 
-- **Email**: your-email@example.com
-- **GitHub**: [your-username](https://github.com/your-username)
+- **Email**: 221350@virtualwindow.co.za
 
 ---

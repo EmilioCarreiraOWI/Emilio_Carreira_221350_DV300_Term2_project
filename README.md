@@ -1,5 +1,4 @@
-
-![Group 250](https://github.com/EmilioCarreiraOWI/Emilio_Carreira_221350_DV300_Term2_project/assets/113447065/257d2d30-12c2-474e-a9ea-160669f7e4fe)
+![Group 252](https://github.com/EmilioCarreiraOWI/Emilio_Carreira_221350_DV300_Term2_project/assets/113447065/0730ce3d-c6e5-41d9-8a21-0feaa1f39ff9)
 # MyDestination
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app). MyDestination is a travel companion app designed to help users explore and plan their travels with ease. The app provides detailed information about destinations, user reviews, and personalized travel suggestions.
@@ -26,7 +25,7 @@ Make sure you have Node.js installed. If not, download and install it from [Node
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/MyDestination.git
+   git clone https://github.com/EmilioCarreiraOWI/Emilio_Carreira_221350_DV300_Term2_project.git
    cd MyDestination
    ```
 
